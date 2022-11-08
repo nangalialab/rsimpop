@@ -10,13 +10,13 @@
 You can install rsimpop like so:
 
 ``` r
-devtools::install_github("NickWilliamsSanger/rsimpop")
+devtools::install_github("nangalialab/rsimpop")
 ```
 
 Or clone the repository and install using the downloaded package tar file
 
 ``` r
-install.packages("somedirectory/rsimpop/rsimpop_2.2.0.tar.gz",repos=NULL)
+install.packages("somedirectory/rsimpop/rsimpop_2.2.4.tar.gz",repos=NULL)
 ```
 
 ## rsimpop
