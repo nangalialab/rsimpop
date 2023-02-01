@@ -25,42 +25,49 @@
 #' test=rtree(20)
 #' tree=plot_tree(test,cex.terminal=0.5,bars=sapply(sprintf("s%d",seq(2,20,2)),function(x) runif(1)))
 #' node_labels(tree)
-plot_tree=function(tree,direction="down",cex.label=1,offset=0,b_do_not_plot=FALSE,lwd=1,bars=NULL,default_edge_color="darkgrey",ymax=NULL,cex.terminal.dots=0,mar=NULL,b.add.scale=TRUE,left.margin.prop=0.1){
+plot_tree=function(tree,direction="down",cex.label=1,offset=0,b_do_not_plot=FALSE,lwd=1,bars=NULL,default_edge_color="darkgrey",ymax=NULL,cex.terminal.dots=0,mar=NULL,b.add.scale=TRUE,left.margin.prop=0.1,vspace.reserve=0,bar.label=""){
   if(is.null(mar)){
     par(mar=c(1, 1, 1, 3) + 0.1)
   }else{
     par(mar=mar)
   }
+  #browser()
   if(!(direction %in% c("down","across"))){
     stop("Unsupported direction provided")
-  }
-  if(direction=="across"){
-    stop("More work needed to support horizontal plotting (across) - please use down")
   }
   N=length(tree$tip.label)
   if(is.null(tree$coords)){
     tree=set_tree_coords(tree)
   }
   coords=tree$coords
-
+  
   if(direction=="across"){
     xmax=max(coords$a1)*1.05
     ymax=max(coords$b1)+1
     offset=offset*xmax
   }else{
     if(is.null(ymax)){
+      ytop=max(coords$a1)
       ymax=max(coords$a1)*1.05
-    }
+    }else{  #add 24jun
+      #coords[,1:2]=coords[,1:2]+(ymax-max(coords$a1))
+      #tree$coords=coords
+      ytop=ymax
+      ymax=1.05*ymax
+    }  #end add
     xmax=max(coords$b1)+1
     offset=offset*ymax
   }
   if(b_do_not_plot){
     return(tree)
   }
+  
   if(is.null(bars)){
-    plot(NULL,axes=FALSE,xlim=c(0-(xmax*left.margin.prop),xmax),ylim=c(0-(ymax*0.05),ymax),xlab="",ylab="")
+    YMIN=0-ymax*0.05-vspace.reserve*ymax
+    plot(NULL,axes=FALSE,xlim=c(0-(xmax*left.margin.prop),xmax),ylim=c(YMIN,ymax),xlab="",ylab="")
+    #plot(NULL,axes=FALSE,xlim=c(0-(xmax*left.margin.prop),xmax),ylim=c(0-(ymax*0.05),ymax),xlab="",ylab="")
   }else{
-
+    ##ymax not supported..
     plot(NULL,axes=FALSE,xlim=c(0-(xmax*left.margin.prop),xmax),ylim=c(0-(ymax*0.15),ymax),xlab="",ylab="")
   }
   idx.tip=match(1:N,tree$edge[,2])
@@ -68,8 +75,8 @@ plot_tree=function(tree,direction="down",cex.label=1,offset=0,b_do_not_plot=FALS
     apply(coords,1,function(x) elbow(x[1],x[2],x[3],x[4]))
     text(tree$tip.label,x =coords$a1[idx.tip]+offset ,y=coords$b1[idx.tip],cex = cex.label,pos = 4)
   }else{
-    top=max(coords$a1)
-    ##browser()
+    top=ytop
+    #top=max(coords$a1)
     m=dim(coords)[1]
     if(is.null(coords$color)){
       col=rep(default_edge_color,m)
@@ -94,18 +101,22 @@ plot_tree=function(tree,direction="down",cex.label=1,offset=0,b_do_not_plot=FALS
   scales=c(0,1,10,50,100,200,500,1000,2000,5000)
   #scale=scales[max(which(ymax/2>scales))]
   scale=scales[max(which(ymax/5>=scales))]
-  #cat("scale=",scale,"\n")
+  if(scale==0){
+    scale=0.1
+  }
   if(b.add.scale){
+    #browser()
     axis(side = 4,at=seq(top,-scale,-scale),label=seq(0,top+scale,scale),las=2)
   }
-  #arrows(x0=length(tree$tip.label)+0.5,y0=0,y1=scale,length=0.1,code=3,angle=90)
-  #text(sprintf("%s Muts",scale),x=length(tree$tip.label)-0.5,y=0.5*scale,pos=4,cex=cex.label,offset=0.1)
   if(!is.null(bars)){
     maxbar=max(bars)
     idx=match(names(bars),tree$tip.label)
     rect(xleft=idx-0.5,xright=idx+0.5,ybottom = -ymax*0.15,ytop=-ymax*0.15+ymax*0.1*bars/maxbar,col = "grey")
-
+    axis(side = 2,at=c(-ymax*0.15,ytop=-ymax*0.15+ymax*0.1),label=trimws(sprintf("%3.2g",c(0,maxbar))),las=2,line=-2)
+    mtext(side=2,at=-ymax*0.15+ymax*0.05,text = bar.label,line = 2)
   }
+  tree$ymax=ymax
+  tree$vspace.reserve=vspace.reserve
   tree
 }
 set_cedge=function(parent,tree){

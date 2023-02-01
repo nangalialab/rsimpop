@@ -1,27 +1,34 @@
-11/01/2022
+01/02/2023
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # rsimpop
 
 <!-- badges: start -->
 <!-- badges: end -->
+
 ## Installation
 
 You can install rsimpop like so:
 
 ``` r
-devtools::install_github("nangalialab/rsimpop")
+devtools::install_github("NickWilliamsSanger/rsimpop")
 ```
 
-Or clone the repository and install using the downloaded package tar file
+Or clone the repository and install using the downloaded package tar
+file
 
 ``` r
-install.packages("somedirectory/rsimpop/rsimpop_2.2.4.tar.gz",repos=NULL)
+install.packages("somedirectory/rsimpop/rsimpop_2.2.0.tar.gz",repos=NULL)
 ```
 
 ## rsimpop
 
-This package implements Gillespie Algorithm implementation of the Birth-Death model that allows the simultaneous simulation of multiple cellular compartments each with their own time varying-target population size and sub-compartments with differential fitness (driver compartments).
+This package implements Gillespie Algorithm implementation of the
+Birth-Death model that allows the simultaneous simulation of multiple
+cellular compartments each with their own time varying-target population
+size and sub-compartments with differential fitness (driver
+compartments).
 
 ## Simulate from Zygote for 1 year and subsample tree
 
@@ -89,7 +96,12 @@ title("Sampled Early Development Tree: Division Tree")
 
 <img src="man/figures/README-zygote-2.png" width="100%" />
 
-Notice how the sampled tree has 101 tips rather than the specified 100. This is because the simulator always maintains an inactive outgroup (here s1). A group is rendered inactive by specifying a negative "rate" in the cfg$compartment dataframe. The tree branch lengths are now given in terms of the number of self renewal divisions. This allows the user to flexibly apply their own mutation acquisition model:
+Notice how the sampled tree has 101 tips rather than the specified 100.
+This is because the simulator always maintains an inactive outgroup
+(here s1). A group is rendered inactive by specifying a negative “rate”
+in the cfg$compartment dataframe. The tree branch lengths are now given
+in terms of the number of self renewal divisions. This allows the user
+to flexibly apply their own mutation acquisition model:
 
 ``` r
 get_elapsed_time_tree
@@ -120,7 +132,7 @@ get_elapsed_time_tree
 #>     }
 #>     tree
 #> }
-#> <bytecode: 0x7f982147c958>
+#> <bytecode: 0x1212bbeb0>
 #> <environment: namespace:rsimpop>
 sampledtree1m=get_elapsed_time_tree(sampledtree1,mutrateperdivision=1,backgroundrate=15/365)
 ```
@@ -130,7 +142,11 @@ t1=plot_tree(sampledtree1m,cex.label = 0.5);title("Sampled Early Development Tre
 node_labels(t1,cex=0.8)
 ```
 
-<img src="man/figures/README-events-1.png" width="100%" /> The blue numbers are represent the ID of the child node associated with each branch. This "node" ID together with a timestamp is used to locate events on the tree - see, the *events* data.frame , that is maintained and updated by the simulator:
+<img src="man/figures/README-events-1.png" width="100%" /> The blue
+numbers are represent the ID of the child node associated with each
+branch. This “node” ID together with a timestamp is used to locate
+events on the tree - see, the *events* data.frame , that is maintained
+and updated by the simulator:
 
 ``` r
 print(sampledtree1m$events)
@@ -139,7 +155,8 @@ print(sampledtree1m$events)
 #> 2     1        0  103  0   1
 ```
 
-Notice how here the events dataframe specifies the compartment for the outgroup and the rest of the tree.
+Notice how here the events dataframe specifies the compartment for the
+outgroup and the rest of the tree.
 
 We can introduce another cell compartment as follows:
 
@@ -164,7 +181,8 @@ print(sampledtree1a$events)
 #> 12     2        0   96 135.4454  11
 ```
 
-The occurence of such events for such sub-sampled trees can be visualised using the built in function *plot\_tree\_events*
+The occurence of such events for such sub-sampled trees can be
+visualised using the built in function *plot_tree_events*
 
 ``` r
 plot_tree_events(sampledtree1a)
@@ -180,7 +198,9 @@ plot_tree_events(sampledtree1a)
     #> 
     #> Rooted; includes branch lengths.
 
-Recall that the config has already been updated with the target population sizes and division rates. The next phase can therefore be simulated:
+Recall that the config has already been updated with the target
+population sizes and division rates. The next phase can therefore be
+simulated:
 
 ``` r
 sp2=sim_pop(sampledtree1a,params=list(n_sim_days=365*10),cfg=sampledtree1a$cfg)
@@ -233,7 +253,7 @@ run_neutral_sim
 #>     adult1 = sim_pop(growthphase, params = params, cfg)
 #>     return(adult1)
 #> }
-#> <bytecode: 0x7f981eba8e58>
+#> <bytecode: 0x12497e7e8>
 #> <environment: namespace:rsimpop>
 testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
 #> n_sim_days: 3650
@@ -279,7 +299,8 @@ plot_tree_events(st,cex.label = 0);title("Phylogeny of 100 cells sampled from sm
 
 ## Selection based simulation
 
-Here we are interested in the simple situation of one cellular compartment with multiple sub-compartments.
+Here we are interested in the simple situation of one cellular
+compartment with multiple sub-compartments.
 
 ``` r
 #run_selection_sim
@@ -466,7 +487,6 @@ selsim=run_selection_sim(0.05,1/(2*190),target_pop_size = 5e4,nyears = 50,fitnes
 #> driver_rate_per_cell_per_day: 0
 #> MAX_EVENTS= 36500 
 #> MAX_SIZE= 150003
-#> Warning in combine_simpops(adult1, adult2): Deprecated use of combine_simpops
 print(selsim$cfg$info)
 #>   population val fitness id driver1
 #> 1          1   0     0.0  0       0
@@ -474,7 +494,8 @@ print(selsim$cfg$info)
 #> 3      37727   1     0.3  1       0
 ```
 
-Plot example sampled trees using various brach length models (or scaling):
+Plot example sampled trees using various brach length models (or
+scaling):
 
 ``` r
 seltree100=get_subsampled_tree(selsim,100)
@@ -724,8 +745,7 @@ tselsim=run_transient_selection(0.05,1/(2*190),target_pop_size = 5e4,nyears_driv
 #> maxt: 5475.01064372538
 #> driver_rate_per_cell_per_day: 0
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054
-#> Warning in combine_simpops(adult1, adult2): Deprecated use of combine_simpops
+#> MAX_SIZE= 150054 
 #> n_sim_days: 18250
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
@@ -753,7 +773,11 @@ plot_tree_events(get_elapsed_time_tree(tseltree200),cex.label=0)
 
 ## Neutral simulation with a trajectory
 
-Create a trajectory dataframe with 3 columns (ts,target\_pop\_size,division\_rate) and simulate using the run\_neutral\_trajectory wrapper function. Note that timestamps and rates are expressed in units of days and expected divisions per day respectively.
+Create a trajectory dataframe with 3 columns
+(ts,target_pop_size,division_rate) and simulate using the
+run_neutral_trajectory wrapper function. Note that timestamps and rates
+are expressed in units of days and expected divisions per day
+respectively.
 
 ``` r
 trajectory=data.frame(ts=365*(1:80),target_pop_size=5e4+100*(1:80),division_rate=1/(2*190))
@@ -796,9 +820,16 @@ plot_tree(get_elapsed_time_tree(st),cex.label = 0)
 
 ## Multiple drivers
 
-Multiple drivers can be generated at a specified rate so the waiting time between events is exponentially distributed.
+Multiple drivers can be generated at a specified rate so the waiting
+time between events is exponentially distributed.
 
-Firstly the user need to create a function that draws a selection coefficient from a distibution. The simulator can comfortably accommodate over 100 drivers per year but nonetheless it is advised that a selection coefficient threshold be specified (say 0.05) and that driver incidence be made correspondingly rarer. Note that at least 200,000 fitness coefficent values need to provided to run\_driver\_process\_sim.
+Firstly the user need to create a function that draws a selection
+coefficient from a distibution. The simulator can comfortably
+accommodate over 100 drivers per year but nonetheless it is advised that
+a selection coefficient threshold be specified (say 0.05) and that
+driver incidence be made correspondingly rarer. Note that at least
+200,000 fitness coefficent values need to provided to
+run_driver_process_sim.
 
 ### Selection coefficient specification
 
@@ -828,23 +859,18 @@ Look at the final per driver counts
 print(dps$cfg$info %>% filter(population>0))
 #>    population val    fitness id driver1
 #> 1           1   0 0.00000000  0       0
-#> 2       77602   1 0.00000000  0       0
-#> 3        8953   1 0.10364429 13       0
-#> 4       11157   1 0.12392172  5       0
-#> 5         408   1 0.14660430 48       0
-#> 6          71   1 0.09981411 39       0
-#> 7        1229   1 0.08240172 23       0
-#> 8          33   1 0.10568952 49       0
-#> 9           6   1 0.09556388 30       0
-#> 10        287   1 0.10279057 40       0
-#> 11        214   1 0.10102528 52       0
-#> 12         27   1 0.10910568 55       0
-#> 13         13   1 0.08134871 58       0
-#> 14          3   1 0.09713799 59       0
-#> 15          3   1 0.22739413 64       0
-#> 16          1   1 0.11165956 68       0
-#> 17          6   1 0.09880682 65       0
-#> 18         18   1 0.10898082 63       0
+#> 2       64474   1 0.00000000  0       0
+#> 3         425   1 0.08373362 12       0
+#> 4       26621   1 0.12172817 17       0
+#> 5         335   1 0.09556388 30       0
+#> 6        6550   1 0.14679795 24       0
+#> 7         689   1 0.09278150 21       0
+#> 8           5   1 0.10562203 74       0
+#> 9          12   1 0.10150523 77       0
+#> 10          4   1 0.10999497 78       0
+#> 11        687   1 0.10279057 40       0
+#> 12        201   1 0.08816095 41       0
+#> 13          1   1 0.09488368 81       0
 ```
 
 Plot an example sampled tree
@@ -888,7 +914,8 @@ Continue simulating the same individual until the age of 90
 dps90=run_driver_process_sim(simpop=dps,initial_division_rate = 0.1,final_division_rate = 1/(2*190),target_pop_size = 1e5,nyears = 90,fitness=fitnessExpFn,drivers_per_cell_per_day = 1/(365*1e5))
 ```
 
-Note that as of version 2.0.0 driver ids are not reused so they are now preserved between runs.
+Note that as of version 2.0.0 driver ids are not reused so they are now
+preserved between runs.
 
 ``` r
 dpst90=get_subsampled_tree(dps90,200)
@@ -910,7 +937,8 @@ plot_tree_events(dpst90,cex.label = 0)
     #> 
     #> Rooted; includes branch lengths.
 
-If desired the colouring can be kept consistent across 2 plots from different times (experimental) using the events.keep argument:
+If desired the colouring can be kept consistent across 2 plots from
+different times (experimental) using the events.keep argument:
 
 ``` r
 par(mfcol=c(2,1))
@@ -936,6 +964,7 @@ dps=run_driver_process_sim(initial_division_rate=0.1,user_trajectory=trajectory,
 #> driver_rate_per_cell_per_day: 2.73972602739726e-08
 #> MAX_EVENTS= 730 
 #> MAX_SIZE= 150303
+
 plot.simpop(dps,xlim=c(0,100))
 lines(trajectory$ts/365,trajectory$target_pop_size,col="red")
 legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
