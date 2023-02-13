@@ -12,6 +12,7 @@
 #' @param fitness - relative fitness advantage.  Cells carrying this divide at a rate=(1+fitness)*baserate
 #' @param minprop - Minimum aberrant cell fraction at nyears for driver to be regarded as have "taken"
 #' @param maxtry  - Maximum number of attempts to introduce a driver
+#' @param max_driver_count - If positive simulation will stop when number drivers matches this.  This evaluated at daily time snaps.
 #' @return simpop object.
 #' @export
 #' @examples
@@ -23,12 +24,12 @@
 run_selection_sim=function (initial_division_rate = 0.1, final_division_rate = 1/365, 
                             target_pop_size = 1e+05, nyears_driver_acquisition = 15, 
                             nyears = 40, fitness = 0.2, minprop = 0.001, mindriver = 1, 
-                            maxtry = 40) 
+                            maxtry = 40, max_driver_count=-1) 
 {
   cfg = getDefaultConfig(target_pop_size, rate = initial_division_rate, 
                          ndriver = 1, basefit = fitness)
   params = list(n_sim_days = nyears_driver_acquisition * 365, 
-                b_stop_at_pop_size = 1, b_stop_if_empty = 0)
+                b_stop_at_pop_size = 1, b_stop_if_empty = 0,max_driver_count=max_driver_count)
   growthphase = sim_pop(NULL, params = params, cfg)
   #browser()
   ndivkeep = 0
@@ -520,10 +521,17 @@ run_neutral_trajectory=function(simpop,initial_division_rate,trajectory){
   if(any(trajectory$target_pop_size>20e6)){
     stop("Supplied population too high; should be less than 20e6")
   }
+  if(any(trajectory$target_pop_size<2)){
+    stop("Supplied population too low; should be more than 1")
+  }
+  if(any(is.na(trajectory$target_pop_size)) || any(is.na(trajectory$ts))|| any(is.na(trajectory$division_rate))){
+    stop("trajectory should contain no missing data")
+  }
   params=list(n_sim_days=trajectory$ts[1],##This is the longest that the simulation will continue
               b_stop_at_pop_size=1,
               b_stop_if_empty=0
   )
+  #browser()
   if(is.null(simpop)){
     cfg=getDefaultConfig(target_pop_size = trajectory$target_pop_size[1],rate = initial_division_rate,basefit = 0,ndriver = 1)
     
@@ -541,12 +549,13 @@ run_neutral_trajectory=function(simpop,initial_division_rate,trajectory){
     
     sp=simpop
   }
+  
   params[["b_stop_at_pop_size"]]=0
   for(i in idx:(length(trajectory$ts)-1)){
     cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,trajectory$division_rate[i]),popsize=c(1,trajectory$target_pop_size[i])),
              info=sp$cfg$info)
     cfg=getDefaultConfig(target_pop_size = trajectory$target_pop_size[i],rate = trajectory$division_rate[i],basefit = 0,ndriver = 1)
-    params[["n_sim_days"]]=trajectory$ts[i+1]
+    params[["n_sim_days"]]=max(sp$timestamp+1,trajectory$ts[i+1]) #occasionally the current simulation finishes after the next target date - skip here.
     spx=sim_pop(get_tree_from_simpop(sp),params=params,cfg,b_verbose = FALSE)
     sp=spx  #sp=combine_simpops(sp,spx)
   }
