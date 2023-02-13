@@ -126,7 +126,7 @@ int CellSimulation::getNumberOfAddedDrivers(){
 }
 
 
-int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpty){  //,  , double * nCompFitnessOut
+int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpty, int maxDriverCount){  //,  , double * nCompFitnessOut
 	int i;
 	double totrate;
 	int ncomp=compartments.size();
@@ -218,6 +218,12 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 		if(currentTime-lastSnap>=1.0){
 			snap();
 			lastSnap=currentTime;
+			if(maxDriverCount>0){
+			  ndrivers=std::get<2>(populationTrace.back());
+			  if(ndrivers>=maxDriverCount){
+			    return status;
+			  }
+			}
 		}
 		if(currentTime/365.0 -lastYear > 1 ){
 			//printf("PROGRESS: T=%3.2f year.  population=%d",currentTime/365.0,ntips);
