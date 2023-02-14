@@ -1,4 +1,8 @@
 # CHANGES
+## 2.2.5
+Fixed edge case in run_neutral_trajectory when timepoints are too close together.
+## 2.2.4
+Move to nangalialab.
 ## 2.2.3
 Clean up of vignette documentation
 ## 2.2.2

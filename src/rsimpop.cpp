@@ -172,6 +172,7 @@ void sim_pop2(
 		if(driverAcquisitionRate>1e-5){
 			throw "driverAcquisitionRate too high!";
 		}
+		int maxDriverCount=round(params[5]);
 		
 		vector<Event> events;
 		vector<shared_ptr<CellCompartment>> cellCompartments;
@@ -194,7 +195,7 @@ void sim_pop2(
 				*trajectorySize,
 				*max_size
 				);
-		*status=sim.run((double) n_days,(bool) b_stop_at_pop_size, (bool) b_stop_if_empty);  // (double *) nCompFitnessOut
+		*status=sim.run((double) n_days,(bool) b_stop_at_pop_size, (bool) b_stop_if_empty,maxDriverCount);  // (double *) nCompFitnessOut
 		int nad = sim.getNumberOfAddedDrivers(); 
 		//printf("nad=%d\n",nad);
 		*nMaxDriverIDOut=*nMaxPreviousDriverID+nad;
