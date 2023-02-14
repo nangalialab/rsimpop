@@ -48,7 +48,7 @@ public:
 	void populate_edge_info(int * edgesOut,int * ndivsOut,int * stateOut,int * driverIDOut,
 			double * tBirthOut,int max_nedge,int * nedgeOut,int *nInternalNodes,
 			int * numTip,vector<Event> & eventsOut);
-	int run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpty);  
+	int run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpty,int maxDriverCount);  
 	void recycle(shared_ptr<PhyloNode> node);
 	vector<tuple<double,int,int>> getPopulationTrace();
 	void snap();

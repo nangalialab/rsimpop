@@ -99,7 +99,8 @@ sim_pop=function(tree,
                      b_stop_if_empty=0,
                      b_stop_at_pop_size=0,
                      maxt=tree$maxt,
-                     driver_rate_per_cell_per_day=0
+                     driver_rate_per_cell_per_day=0,
+                     max_driver_count=-1
   )
   fields=names(defaultparams)
   if(length(setdiff(names(params),names(defaultparams)))>0){
@@ -140,7 +141,7 @@ sim_pop=function(tree,
   
   compartment=cfg$compartment
   compartmentinfo=cfg$info
-  
+  #browser()
   # set the trajectory columns to 0 if user is not running run_driver_process_sim()
   if(is.null(trajectory)){
     trajectory_ts = 0; trajectory_pop = 0

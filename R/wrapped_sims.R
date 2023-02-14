@@ -12,6 +12,7 @@
 #' @param fitness - relative fitness advantage.  Cells carrying this divide at a rate=(1+fitness)*baserate
 #' @param minprop - Minimum aberrant cell fraction at nyears for driver to be regarded as have "taken"
 #' @param maxtry  - Maximum number of attempts to introduce a driver
+#' @param max_driver_count - If positive simulation will stop when number drivers matches this.  This evaluated at daily time snaps.
 #' @return simpop object.
 #' @export
 #' @examples
@@ -20,95 +21,85 @@
 #' The selective advantage is introduced as a driver event. The driver is subject to stochastic 
 #' extinction and so is repeatedly dropped in until it "takes".The prevailing state when the driver is introduced is
 #' saved and reinstated with each attempted introduction.
-run_selection_sim=function( initial_division_rate=0.1,
-                            final_division_rate=1/365,
-                            target_pop_size=1e5,
-                            nyears_driver_acquisition=15,
-                            nyears=40,
-                            fitness=0.2, ## relative fitness
-                            minprop=0.001,
-                            mindriver=1,
-                            maxtry=40)
+run_selection_sim=function (initial_division_rate = 0.1, final_division_rate = 1/365, 
+                            target_pop_size = 1e+05, nyears_driver_acquisition = 15, 
+                            nyears = 40, fitness = 0.2, minprop = 0.001, mindriver = 1, 
+                            maxtry = 40, max_driver_count=-1) 
 {
-  cfg=getDefaultConfig(target_pop_size,rate=initial_division_rate,ndriver=1,basefit = fitness)
-  params=list(n_sim_days=nyears_driver_acquisition*365,b_stop_at_pop_size=1,b_stop_if_empty=0)
-  
-  growthphase=sim_pop(NULL,params=params,cfg)
-  ndivkeep=0
-  mdivkeep=0
-  gdivkeep=0
-  tree0=get_tree_from_simpop(growthphase)  #modifying the tips labels (s1,s2,...,sN); N beeing the #tips
-  if(growthphase$status==0)
-  {
-    ##We've exited before maturity and need to add driver now..
-    tree1=tree0
-    params[["n_sim_days"]]=nyears*365 ##years of simulation
-    params[["b_stop_if_empty"]]=1
-    
-    dc=0
-    tries=0
-    tree1_tmp=tree1
-    while(dc<max(minprop*target_pop_size,mindriver) )
-    {
-      if(tries>=maxtry){
+  cfg = getDefaultConfig(target_pop_size, rate = initial_division_rate, 
+                         ndriver = 1, basefit = fitness)
+  params = list(n_sim_days = nyears_driver_acquisition * 365, 
+                b_stop_at_pop_size = 1, b_stop_if_empty = 0,max_driver_count=max_driver_count)
+  growthphase = sim_pop(NULL, params = params, cfg)
+  #browser()
+  ndivkeep = 0
+  mdivkeep = 0
+  gdivkeep = 0
+  tree0 = get_tree_from_simpop(growthphase)
+  if (growthphase$status == 0) {
+    tree1 = tree0
+    params[["n_sim_days"]] = nyears * 365
+    params[["b_stop_if_empty"]] = 1
+    dc = 0
+    tries = 0
+    tree1_tmp = tree1
+    while (dc < max(minprop * target_pop_size, mindriver)) {
+      if (tries >= maxtry) {
         return(NULL)
       }
-      cat("No driver found: tries=",tries,"\n")
-      tries=tries+1
-      tree1_tmp=addDriverEvent(tree1,tree1$cfg,1,fitness=fitness)
+      cat("No driver found: tries=", tries, "\n")
+      tries = tries + 1
+      tree1_tmp = addDriverEvent(tree1, tree1$cfg, 1, fitness = fitness)
       print(tree1_tmp$cfg$info)
-      params[["b_stop_at_pop_size"]]=1
-      adult2=sim_pop(tree1_tmp,params=params,tree1_tmp$cfg)
-      # adult2a=combine_simpops(growthphase,adult2)
-      tree2=get_tree_from_simpop(adult2)  #tree2=get_tree_from_simpop(adult2a)
-      params[["b_stop_at_pop_size"]]=0
-      cfg=tree2$cfg
-      cfg$compartment$rate[2]=final_division_rate
-      cfg$compartment$popsize[2]=target_pop_size
-      adult3=sim_pop(tree2,params=params,cfg)  #adult2=sim_pop(tree2,params=params,cfg)
-      # adult2=combine_simpops(adult2a,adult2)
-      dc=getSingleDriverCount(adult3)  #dc=adult2$cfg$info$population[3]
+      params[["b_stop_at_pop_size"]] = 1
+      adult2 = sim_pop(tree1_tmp, params = params, tree1_tmp$cfg)
+      tree2 = get_tree_from_simpop(adult2)
+      params[["b_stop_at_pop_size"]] = 0
+      cfg = tree2$cfg
+      cfg$compartment$rate[2] = final_division_rate
+      cfg$compartment$popsize[2] = target_pop_size
+      lastsim = sim_pop(tree2, params = params, cfg)
+      dc = rsimpop:::getSingleDriverCount(lastsim)
     }
   }
-  else
-  {
-    gdivkeep=mean(nodeHeights(tree0)[which(tree0$edge[,2]<=length(tree0$tip.label)),2])
-    cfg$compartment$rate[2]=final_division_rate
-    cfg$compartment$popsize[2]=target_pop_size
-    # years=nyears
-    params[["n_sim_days"]]=nyears_driver_acquisition*365 ##years of simulation
-    params[["b_stop_at_pop_size"]]=0 ## So it doesn't stop simulating immediately
-    adult1=sim_pop(tree0,params=params,cfg)
-    # adult1=combine_simpops(growthphase,adult1)
-    tree1=get_tree_from_simpop(adult1)
-    params[["n_sim_days"]]=nyears*365 ##years of simulation
-    params[["b_stop_if_empty"]]=1
-    dc=0
-    tries=0
-    tree1_tmp=tree1
-    while(dc<max(minprop*target_pop_size,mindriver) )
-    {
-      if(tries>=maxtry)  #driver could not be added 
+  else {
+    gdivkeep = mean(nodeHeights(tree0)[which(tree0$edge[, 
+                                                        2] <= length(tree0$tip.label)), 2])
+    cfg$compartment$rate[2] = final_division_rate
+    cfg$compartment$popsize[2] = target_pop_size
+    params[["n_sim_days"]] = nyears_driver_acquisition * 
+      365
+    params[["b_stop_at_pop_size"]] = 0
+    adult1 = sim_pop(tree0, params = params, cfg)
+    tree1 = get_tree_from_simpop(adult1)
+    params[["n_sim_days"]] = nyears * 365
+    params[["b_stop_if_empty"]] = 1
+    dc = 0
+    tries = 0
+    tree1_tmp = tree1
+    while (dc < max(minprop * target_pop_size, mindriver)) {
+      if (tries >= maxtry) 
         return(NULL)
-      cat("No driver found: tries=",tries,"\n")
-      tries=tries+1
-      tree1_tmp=addDriverEvent(tree1,tree1$cfg,1,fitness=fitness)
-      if(TRUE){
-        ndivkeep=nodeHeights(tree1_tmp)[which(tree1_tmp$edge[,2]==tree1_tmp$events$node[3]),2]
-        mdivkeep=mean(nodeHeights(tree1_tmp)[which(tree1_tmp$edge[,2]<=length(tree1_tmp$tip.label)),2])
+      cat("No driver found: tries=", tries, "\n")
+      tries = tries + 1
+      tree1_tmp = addDriverEvent(tree1, tree1$cfg, 1, fitness = fitness)
+      if (TRUE) {
+        ndivkeep = nodeHeights(tree1_tmp)[which(tree1_tmp$edge[, 
+                                                               2] == tree1_tmp$events$node[3]), 2]
+        mdivkeep = mean(nodeHeights(tree1_tmp)[which(tree1_tmp$edge[, 
+                                                                    2] <= length(tree1_tmp$tip.label)), 2])
       }
       print(tree1_tmp$cfg$info)
-      adult2=sim_pop(tree1_tmp,params=params,tree1_tmp$cfg)
-      dc=getSingleDriverCount(adult2)
+      adult2 = sim_pop(tree1_tmp, params = params, tree1_tmp$cfg)
+      dc = getSingleDriverCount(adult2)
     }
-    adult2=combine_simpops(adult1,adult2)
+    lastsim = adult2
   }
-  
-  fulltree=get_tree_from_simpop(adult2)
-  fulltree$tries=tries
-  fulltree$ndivkeep=ndivkeep
-  fulltree$mdivkeep=mdivkeep
-  fulltree$gdivkeep=gdivkeep
+  fulltree = get_tree_from_simpop(lastsim)
+  fulltree$tries = tries
+  fulltree$ndivkeep = ndivkeep
+  fulltree$mdivkeep = mdivkeep
+  fulltree$gdivkeep = gdivkeep
   return(fulltree)
 }
 
@@ -530,10 +521,17 @@ run_neutral_trajectory=function(simpop,initial_division_rate,trajectory){
   if(any(trajectory$target_pop_size>20e6)){
     stop("Supplied population too high; should be less than 20e6")
   }
+  if(any(trajectory$target_pop_size<2)){
+    stop("Supplied population too low; should be more than 1")
+  }
+  if(any(is.na(trajectory$target_pop_size)) || any(is.na(trajectory$ts))|| any(is.na(trajectory$division_rate))){
+    stop("trajectory should contain no missing data")
+  }
   params=list(n_sim_days=trajectory$ts[1],##This is the longest that the simulation will continue
               b_stop_at_pop_size=1,
               b_stop_if_empty=0
   )
+  #browser()
   if(is.null(simpop)){
     cfg=getDefaultConfig(target_pop_size = trajectory$target_pop_size[1],rate = initial_division_rate,basefit = 0,ndriver = 1)
     
@@ -551,12 +549,13 @@ run_neutral_trajectory=function(simpop,initial_division_rate,trajectory){
     
     sp=simpop
   }
+  
   params[["b_stop_at_pop_size"]]=0
   for(i in idx:(length(trajectory$ts)-1)){
     cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,trajectory$division_rate[i]),popsize=c(1,trajectory$target_pop_size[i])),
              info=sp$cfg$info)
     cfg=getDefaultConfig(target_pop_size = trajectory$target_pop_size[i],rate = trajectory$division_rate[i],basefit = 0,ndriver = 1)
-    params[["n_sim_days"]]=trajectory$ts[i+1]
+    params[["n_sim_days"]]=max(sp$timestamp+1,trajectory$ts[i+1]) #occasionally the current simulation finishes after the next target date - skip here.
     spx=sim_pop(get_tree_from_simpop(sp),params=params,cfg,b_verbose = FALSE)
     sp=spx  #sp=combine_simpops(sp,spx)
   }
