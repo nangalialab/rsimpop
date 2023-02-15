@@ -34,7 +34,10 @@ public:
 				double * trajectoryDivRate,
 				int * trajectoryCompartment,
 				int trajectorySize,
-				int maxSize);  
+				int maxSize,double * fitnessDistribution, 
+				int maxPreviousDriverID,
+				int driverFitnessSize,
+				int bVerbose);  
 
 	virtual ~CellSimulation();
 
@@ -56,6 +59,7 @@ public:
 	pair<shared_ptr<PhyloNode>,shared_ptr<PhyloNode>> divide(shared_ptr<PhyloNode> node);
 	void deleteTips(std::set<int> tipsToDelete);
 	int getNumberOfAddedDrivers();
+	pair<int,double> getNextDriver();
 	//double * mfitnessValues;
 	vector<double> mfitnessValues;
 
@@ -88,12 +92,11 @@ private:
 	double driverRate;
 	int driverID=1;
 	int nAddedDrivers=0;
-	//double * mfitnessValues;
-	//double * timeStamp;
-	//int * popTrace;
+	int bVerbose=1;
 	vector<tuple<double,int,int>> populationTrace;///TODO implement at compartment/driver level
 	std::stack<tuple<double,int,double,int>> trajectoryStack;
-
+	int lastDriverID=0;
+	std::stack<double> driverFitnessStack;
 };
 
 #endif /* CELLSIMULATION_H_ */

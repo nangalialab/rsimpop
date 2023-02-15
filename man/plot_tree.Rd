@@ -17,7 +17,9 @@ plot_tree(
   cex.terminal.dots = 0,
   mar = NULL,
   b.add.scale = TRUE,
-  left.margin.prop = 0.1
+  left.margin.prop = 0.1,
+  vspace.reserve = 0,
+  bar.label = ""
 )
 }
 \arguments{

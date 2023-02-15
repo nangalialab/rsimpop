@@ -32,12 +32,12 @@ private:
 	int numOfAddedDrivers=0;
 	std::vector<double> mFitnessOut;
 	std::vector<int> mID;
-	int lastDriverID=0;
+	
 
 
 
 public:
-	CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID,double * fitnessDistribution, int indexInFitnessDistro,int driverFitnessSize);  //,
+	CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID);  //,
 	virtual ~CellCompartment();
 	int id;
 	int mTargetPopSize;
@@ -57,7 +57,7 @@ public:
 	void setRates();
 	void setNumNonEmptyIndices();
 	int getSub(int ID);
-	pair<int,double> getNextDriver();
+	
 
 	void doEvent(CellSimulation & sim);
 	void checkPop();
@@ -71,7 +71,7 @@ public:
     //friend ostream & operator << (ostream &out, const CellCompartment &c);
 	double addDriver(CellSimulation & sim,double ts);   
 //	std::vector<int> subcompIndexInAddDriver; 
-	std::stack<double> driverFitnessStack;
+	
 };
 //ostream & operator << (ostream &out, const CellCompartment &c);
 #endif /* CELLCOMPARTMENT_H_ */

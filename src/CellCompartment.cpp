@@ -14,10 +14,9 @@
 #include "Event.h"
 using namespace std;
 const int MAX_NUM_ADDED_DRIVERS=100000;
-CellCompartment::CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID, double* fitnessDistribution, int maxPreviousDriverID,int driverFitnessSize): 
+CellCompartment::CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID): 
                                  id(id),mTargetPopSize(targetPopSize),mDivisionRate(divisionRate) {  
   nsub=fitnessID.size();
-  lastDriverID=maxPreviousDriverID;
   for(int i=0;i<nsub;i++){
     idxByID[fitnessID[i].second]=i;
     mFitness.push_back(fitnessID[i].first);
@@ -35,10 +34,7 @@ CellCompartment::CellCompartment(int id,int targetPopSize,double divisionRate,st
   }else{
     active=true;
   }
-  for(int i=0;i<driverFitnessSize;i++){
-    //Add backwars because stack is lifo
-   driverFitnessStack.push(fitnessDistribution[driverFitnessSize-1-i]); 
-  }
+  
   
 }
 
@@ -210,7 +206,7 @@ void CellCompartment::doEvent(CellSimulation & sim);
  */
 double CellCompartment::addDriver(CellSimulation & sim,double ts){   //,double fitness
 		
-		pair<int,double> driver=getNextDriver();
+		pair<int,double> driver=sim.getNextDriver();
 		int driverid=driver.first;
 		double fitnessValue=driver.second;
 		setNumNonEmptyIndices();
@@ -280,16 +276,7 @@ double CellCompartment::addDriver(CellSimulation & sim,double ts){   //,double f
 }
 
 
-pair<int,double> CellCompartment::getNextDriver(){
-  if(driverFitnessStack.empty()){
-    //TODO throw catchable error so that the simulator just passes control back to R..
-    throw "Run out of drivers... is unexpectedly empty!";
-  }
-  double fitness=driverFitnessStack.top();
-  driverFitnessStack.pop();
-  lastDriverID++;
-  return pair<int,double>(lastDriverID,fitness);
-}
+
 /**
 double CellCompartment::getNextFitness(int currentFitnessIndex){
 	return mfitnessDistribution[currentFitnessIndex];  
