@@ -36,6 +36,7 @@ run_selection_sim=function (initial_division_rate = 0.1, final_division_rate = 1
   mdivkeep = 0
   gdivkeep = 0
   tree0 = get_tree_from_simpop(growthphase)
+  ##browser()
   if (growthphase$status == 0) {
     tree1 = tree0
     params[["n_sim_days"]] = nyears * 365
@@ -207,17 +208,15 @@ run_driver_process_sim=function(
   }else{
     stop("Please supply function for generating a single selection coefficient")
   }
-  
-  
-  #browser()
+  ###browser()
   if(is.null(simpop)){
     
     params=list(n_sim_days=user_trajectory$ts[1],  ##This is the longest that the simulation will continue
                 b_stop_at_pop_size=0,
                 b_stop_if_empty=0,
                 driver_rate_per_cell_per_day=dpcpd)
-    cfg=getDefaultConfig(user_trajectory$target_pop_size[1],rate=user_trajectory$division_rate[1],
-                         ndriver=1,basefit = 0)
+    #cfg=getDefaultConfig(user_trajectory$target_pop_size[1],rate=user_trajectory$division_rate[1],
+    #                     ndriver=1,basefit = 0)
     cfg2=getDefaultConfig(user_trajectory$target_pop_size[1],rate=initial_division_rate,
                           ndriver=1,basefit = 0)
     params2=params
@@ -226,6 +225,9 @@ run_driver_process_sim=function(
     #if(tree0$status==1){
     maxd=max(1,tree0$maxDriverID)
     params$n_sim_days=max(tree0$timestamp)
+    cfg=tree0$cfg
+    cfg$compartment$rate[2]=user_trajectory$division_rate[1]
+    cfg$compartment$popsize[2]=user_trajectory$target_pop_size[1]
     tree0=sim_pop(tree0,params=params,cfg,b_verbose = b_verbose, trajectory=user_trajectory,#[2:nrow(user_trajectory),],
                   driversFitness=fitness_gen[-(1:maxd)])
   }else{
@@ -516,7 +518,7 @@ convert_annualS_to_s=function(S,divrate){
 
 getSingleDriverCount=function(sim){
   if(length(which(sim$events$driverid>0))>0){
-    sim$cfg$info$population[3]
+    sim$cfg$info$population[which.max(sim$cfg$info$fitness)]
   }else{
     0
   }

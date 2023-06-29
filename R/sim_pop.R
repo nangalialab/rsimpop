@@ -54,13 +54,14 @@ sim_pop=function(tree,
                                        #will be picked.
 {
   toCombine=TRUE
+  ##browser()
   if(is.null(tree)){
     toCombine=FALSE
     tree=rtree(2)
     tree$edge.length=rep(0,2)
     tree$events=data.frame(value=0:1,driverid=c(0,0),node=1:2,ts=0.0,uid=0:1)
   }
-  
+  #browser()
   # convert driversFitness into double to fit the input type for the C++ sim_pop() function
   if(is.null(driversFitness)){
     #driversFitness=-1.0
@@ -257,6 +258,7 @@ sim_pop=function(tree,
              node=res$eventnodeOut[1:nevent],
              ts=res$eventtsOut[1:nevent],
              uid=res$eventuidOut[1:nevent])
+  #browser()
   if(res$nMaxDriverIDOut - max_initial_driverid >0 )  #
   {
     drivers=rbind(cfg$drivers,
@@ -712,7 +714,8 @@ addCellCompartment=function(cfg,population,rate,ndriver=0,basefit=0,descr=NULL){
   
   cfg$info=rbind(cfg$info,row)
   cfg$compartment=rbind(cfg$compartment,data.frame(val=val,rate=rate,popsize=population,desc=descr))
-  cfg$drivers=rbind(cfg$drivers,data.frame(val=val,driver=1,fitness=0))
+  ## TODO change this so adding empty works - changing this doesn't currently play nice with addDriverEvent
+  cfg$drivers=rbind(cfg$drivers,data.frame(val=val,driver=1,fitness=0))#data.frame(val=integer(0),driver=integer(0),fitness=numeric(0)))#
   cfg
 }
 
