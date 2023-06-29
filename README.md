@@ -1,4 +1,4 @@
-15/02/2023
+29/06/2023
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -134,7 +134,7 @@ get_elapsed_time_tree
 #>     }
 #>     tree
 #> }
-#> <bytecode: 0x112ff6978>
+#> <bytecode: 0x127664518>
 #> <environment: namespace:rsimpop>
 sampledtree1m=get_elapsed_time_tree(sampledtree1,mutrateperdivision=1,backgroundrate=15/365)
 ```
@@ -256,7 +256,7 @@ run_neutral_sim
 #>     adult1 = sim_pop(growthphase, params = params, cfg)
 #>     return(adult1)
 #> }
-#> <bytecode: 0x13060a960>
+#> <bytecode: 0x111dcbdf0>
 #> <environment: namespace:rsimpop>
 testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
 #> n_sim_days: 3650
