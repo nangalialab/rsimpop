@@ -8,14 +8,15 @@ run_driver_process_sim(
   initial_division_rate = 0.1,
   final_division_rate = 1/365,
   target_pop_size = 1e+05,
-  drivers_per_year = 0.1,
+  drivers_per_year = 0,
   nyears = 40,
-  fitnessGen = fitness_vector,
+  fitnessGen = function() {     0 },
   bForceReseed = FALSE,
   offset = 0,
   user_trajectory = NULL,
   simpop = NULL,
-  drivers_per_cell_per_day = NA
+  drivers_per_cell_per_day = NA,
+  b_verbose = FALSE
 )
 }
 \arguments{

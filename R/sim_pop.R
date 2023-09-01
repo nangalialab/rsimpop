@@ -47,20 +47,21 @@ sim_pop=function(tree,
                  params=list(),
                  cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,1/120.0),popsize=c(1,1e4)),
                           info=data.frame(val=c(0,1,1),fitness=c(-1,0,0.2))),
-                 b_verbose=TRUE, 
+                 b_verbose=1, 
                  b_check=FALSE,
                  trajectory=NULL,  #tarjectory
                  driversFitness=NULL)  #driversFitness will represent the distribution from which the driver's fitness
                                        #will be picked.
 {
   toCombine=TRUE
+  ##browser()
   if(is.null(tree)){
     toCombine=FALSE
     tree=rtree(2)
     tree$edge.length=rep(0,2)
     tree$events=data.frame(value=0:1,driverid=c(0,0),node=1:2,ts=0.0,uid=0:1)
   }
-  
+  #browser()
   # convert driversFitness into double to fit the input type for the C++ sim_pop() function
   if(is.null(driversFitness)){
     #driversFitness=-1.0
@@ -77,11 +78,8 @@ sim_pop=function(tree,
       }
     }
   }
-  #if(length(driversFitness)<1e5){
-    #driversFitness=c(driversFitness,rep(0,1e5-length(driversFitness)))
-  #  stop("Please provide at least 100,000 driver fitness values")
-  #}
   
+  # TODO : FIX THIS so driver ID can never be 0
   if(nrow(cfg$info)==2){
     #max_initial_driverid = 1
     max_initial_driverid=0
@@ -140,6 +138,7 @@ sim_pop=function(tree,
   nevents=dim(tree$events)[1]
   
   compartment=cfg$compartment
+  compartment$popsize=ceiling(compartment$popsize)
   compartmentinfo=cfg$info
   #browser()
   # set the trajectory columns to 0 if user is not running run_driver_process_sim()
@@ -150,18 +149,22 @@ sim_pop=function(tree,
     MAX_SIZE=3*totalpop ##Allows for stochastic drift in population size (need to make this robust)
     MAX_EVENTS=ceiling(2*params[["n_sim_days"]])
   }else if(is.data.frame(trajectory) | is.data.table(trajectory)){
-    trajectory_ts = trajectory$ts; trajectory_pop = trajectory$target_pop_size  
-    trajectory_div_rate = trajectory$division_rate; trajectory_size = nrow(trajectory)
+    trajectory$target_pop_size=ceiling(trajectory$target_pop_size)
+    trajectory_ts = trajectory$ts
+    trajectory_pop = trajectory$target_pop_size  
+    trajectory_div_rate = trajectory$division_rate
+    trajectory_size = nrow(trajectory)
     trajectory_compartment = trajectory$compartment
+    
     trj=trajectory %>% group_by(compartment) %>% summarise(maxpop=max(target_pop_size))
     totalpop=sum(trj$maxpop) #max(trajectory_pop)   #max(sum(compartment$popsize),length(tree$tip.label))
     ##Include other compartments
     totalpop=totalpop+sum(compartment$popsize[which(!(compartment$val %in% trajectory$compartment))])
     totalpop=max(totalpop,length(tree$tip.label))
-    MAX_SIZE=3*totalpop ##Allows for stochastic drift in population size (need to make this robust)
+    MAX_SIZE=ceiling(3*totalpop)+100 ##Allows for stochastic drift in population size (need to make this robust)
     MAX_EVENTS=ceiling(2*max(trajectory_ts))
   }
-  
+  #browser()
   # if(ndriver>1000){
   #   stop("Too many drivers: edit CellSimulation::setCompartmentInfoRecursively in C++ to support more!")
   # }
@@ -175,6 +178,7 @@ sim_pop=function(tree,
     cat("MAX_SIZE=",MAX_SIZE,"\n")
     ## browser()
   }
+  #bverbose=ifelse(b_verbose,1,0)
   res=.C("sim_pop2",
          edges=as.integer(edges),
          ndivs=as.integer(ndivs),
@@ -207,6 +211,7 @@ sim_pop=function(tree,
          trajectoryCompartment = as.integer(trajectory_compartment),
          trajectorySize = as.integer(trajectory_size),
          driverSize=as.integer(length(driversFitness)),
+         bVerbose=as.integer(b_verbose),
          edgesOut=integer(2*MAX_SIZE),
          nDivsOut=integer(MAX_SIZE),
          stateOut=integer(MAX_SIZE),
@@ -253,6 +258,7 @@ sim_pop=function(tree,
              node=res$eventnodeOut[1:nevent],
              ts=res$eventtsOut[1:nevent],
              uid=res$eventuidOut[1:nevent])
+  #browser()
   if(res$nMaxDriverIDOut - max_initial_driverid >0 )  #
   {
     drivers=rbind(cfg$drivers,
@@ -708,7 +714,8 @@ addCellCompartment=function(cfg,population,rate,ndriver=0,basefit=0,descr=NULL){
   
   cfg$info=rbind(cfg$info,row)
   cfg$compartment=rbind(cfg$compartment,data.frame(val=val,rate=rate,popsize=population,desc=descr))
-  cfg$drivers=rbind(cfg$drivers,data.frame(val=val,driver=1,fitness=0))
+  ## TODO change this so adding empty works - changing this doesn't currently play nice with addDriverEvent
+  cfg$drivers=rbind(cfg$drivers,data.frame(val=val,driver=1,fitness=0))#data.frame(val=integer(0),driver=integer(0),fitness=numeric(0)))#
   cfg
 }
 

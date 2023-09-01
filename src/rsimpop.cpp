@@ -19,8 +19,6 @@ extern "C" {
  * Functions called by R.
  */
 
-
-
 /**
  * Creates and populates events and creates cellCompartments with the correct number of sub-compartments with the specified fitness.
  *
@@ -56,10 +54,7 @@ void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cel
 		cellCompartments.push_back(std::make_shared<CellCompartment>(CellCompartment(i,
 		compartmentsize[i],
 		compartmentrate[i],
-		fitnessByCompartment[compartmentval[i]],
-		fitnessDistribution,
-		*ndriverevents,
-		*driverFitnessSize)));
+		fitnessByCompartment[compartmentval[i]])));
 	}
 }
 
@@ -133,6 +128,7 @@ void sim_pop2(
 		int * trajectoryCompartment,
 		int * trajectorySize,
 		int * driverFitnessSize,
+		int * bVerbose,
 		int * edgesOut,
 		int * nDivsOut,
 		int * statusOut,
@@ -193,7 +189,11 @@ void sim_pop2(
 				trajectoryDivRate,
 				trajectoryCompartment,
 				*trajectorySize,
-				*max_size
+				*max_size,
+				fitnessDistribution,
+				*nMaxPreviousDriverID,
+				*driverFitnessSize,
+				*bVerbose
 				);
 		*status=sim.run((double) n_days,(bool) b_stop_at_pop_size, (bool) b_stop_if_empty,maxDriverCount);  // (double *) nCompFitnessOut
 		int nad = sim.getNumberOfAddedDrivers(); 
@@ -319,7 +319,11 @@ void sub_sample(
 				trajectoryDivRate,
 				trajectoryCompartment,
 				*trajectorySize,
-				*max_size);
+				*max_size,
+				fitnessDistribution,
+				*ndriverevents,
+				*driverFitnessSize,
+				0);
 		sim.deleteTips(tipsToDelete);
 		vector<Event> eventsOut;
 		sim.populate_edge_info(edgesOut,nDivsOut,stateOut,driverIDOut,tBirthOut,*max_size,nedgeOut,nInternalNodeOut,ntipsOut,eventsOut);

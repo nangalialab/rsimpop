@@ -4,7 +4,12 @@
 \alias{run_neutral_trajectory}
 \title{Runs a simple single compartment neutral simulation with a specified trajectory}
 \usage{
-run_neutral_trajectory(simpop, initial_division_rate, trajectory)
+run_neutral_trajectory(
+  simpop,
+  initial_division_rate,
+  trajectory,
+  b_verbose = 1
+)
 }
 \arguments{
 \item{simpop}{\itemize{
@@ -16,7 +21,11 @@ run_neutral_trajectory(simpop, initial_division_rate, trajectory)
 }}
 
 \item{trajectory}{\itemize{
-\item data.frame - with fields ts(timestamp in days),target_pop_size,division_rate
+\item data.frame - with fields ts(timestamp in days),target_pop_size,division_rate, compartment.
+}}
+
+\item{b_verbose}{\itemize{
+\item FALSE or 0 for silence. 1 for progress per year. 2 to report all changes to target population size
 }}
 
 \item{nyears}{\itemize{
