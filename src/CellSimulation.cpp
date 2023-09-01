@@ -31,7 +31,11 @@ CellSimulation::CellSimulation(int * edges,
 		double * trajectoryDivRate,
 		int * trajectoryCompartment,
 		int trajectorySize,
-		int maxSize){ 
+		int maxSize,
+		double * fitnessDistribution, 
+		int maxPreviousDriverID,
+		int driverFitnessSize,
+		int bVerbose){ 
 	
 	//cout << "nrow trajectory: " << trajectorySize << endl;
 	if(trajectorySize>=1 && trajectoryTs[0]!=0){
@@ -96,8 +100,18 @@ CellSimulation::CellSimulation(int * edges,
 	}
 	currentTime=startTime;
 	driverRate=driverAcquisitionRate;
+	this->bVerbose=bVerbose;
+	for(int i=0;i<driverFitnessSize;i++){
+	  //Add backwars because stack is lifo
+	  driverFitnessStack.push(fitnessDistribution[driverFitnessSize-1-i]); 
+	}
+	lastDriverID=maxPreviousDriverID;
+	
+	
+	//printf("bVerbose=%d\n",bVerbose);
 	//The following actually populates the CellCompartments by copying pointers to PhyloNodes that correspond to extant cells into their compartments and sub-compartments.
 	setCompartmentInfo();
+	
 	resetNtips(false);
 }
 
@@ -227,11 +241,13 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 		}
 		if(currentTime/365.0 -lastYear > 1 ){
 			//printf("PROGRESS: T=%3.2f year.  population=%d",currentTime/365.0,ntips);
+			if(bVerbose){
 			printf("PROGRESS: T=%d year.  population=%d",int(currentTime/365.0),ntips);
 			if (!populationTrace.empty()){
 				printf(":drivers=%d\n",std::get<2>(populationTrace.back()));
 			}else{
 				printf("\n");
+			}
 			}
 			lastYear=currentTime/365.0;
 		}
@@ -245,7 +261,9 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 				  compartments[compartmentID]->mDivisionRate = std::get<2>(newParam);
 				  compartments[compartmentID]->mTargetPopSize = std::get<1>(newParam);
 				  //stopTime = std::get<0>(newParam);
+				  if(bVerbose>1){
 				  printf("Updated params:t=%3.2f:till=%3.2f:comp=%d;rate=%5.6f:poptarget=%d\n",currentTime,stopTime,compartmentID,compartments[compartmentID]->mDivisionRate,compartments[compartmentID]->mTargetPopSize);
+				  }
 				  trajectoryStack.pop();
 				}else{
 				  //setting is in past so just pop..
@@ -509,6 +527,16 @@ int CellSimulation::incrementCurrentDriverID(){
 }
 */
 
+pair<int,double> CellSimulation::getNextDriver(){
+  if(driverFitnessStack.empty()){
+    //TODO throw catchable error so that the simulator just passes control back to R..
+    throw "Run out of drivers... is unexpectedly empty!";
+  }
+  double fitness=driverFitnessStack.top();
+  driverFitnessStack.pop();
+  lastDriverID++;
+  return pair<int,double>(lastDriverID,fitness);
+}
 
 void CellCompartment::doEvent(CellSimulation & sim){
 	if(numNonEmptyCompartments==0){

@@ -13,7 +13,8 @@ run_selection_sim(
   fitness = 0.2,
   minprop = 0.001,
   mindriver = 1,
-  maxtry = 40
+  maxtry = 40,
+  max_driver_count = -1
 )
 }
 \arguments{
@@ -47,6 +48,10 @@ run_selection_sim(
 
 \item{maxtry}{\itemize{
 \item Maximum number of attempts to introduce a driver
+}}
+
+\item{max_driver_count}{\itemize{
+\item If positive simulation will stop when number drivers matches this.  This evaluated at daily time snaps.
 }}
 }
 \value{

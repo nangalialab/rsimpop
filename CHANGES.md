@@ -1,4 +1,9 @@
 # CHANGES
+## 2.2.7
+Fix bug where run_driver_process_sim dropped drivers from growth phase
+## 2.2.6
+Replace run_neutral_trajectory implementation as special case of run_driver_process_sim. Driver IDs are now unique across compartments.
+
 ## 2.2.5
 Fixed edge case in run_neutral_trajectory when timepoints are too close together.
 ## 2.2.4

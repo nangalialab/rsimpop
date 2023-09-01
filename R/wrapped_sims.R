@@ -36,6 +36,7 @@ run_selection_sim=function (initial_division_rate = 0.1, final_division_rate = 1
   mdivkeep = 0
   gdivkeep = 0
   tree0 = get_tree_from_simpop(growthphase)
+  ##browser()
   if (growthphase$status == 0) {
     tree1 = tree0
     params[["n_sim_days"]] = nyears * 365
@@ -140,14 +141,15 @@ run_driver_process_sim=function(
                                  initial_division_rate=0.1,
                                  final_division_rate=1/365,
                                  target_pop_size=1e5,
-                                 drivers_per_year=0.1,
+                                 drivers_per_year=0.0,
                                  nyears=40,
-                                 fitnessGen=fitness_vector,
+                                 fitnessGen=function(){0.0},
                                  bForceReseed=FALSE,
                                  offset=0,
                                  user_trajectory=NULL,
                                  simpop=NULL,
-                                 drivers_per_cell_per_day=NA
+                                 drivers_per_cell_per_day=NA,
+                                 b_verbose=FALSE
                                  )
 {
   
@@ -159,7 +161,9 @@ run_driver_process_sim=function(
   }
   ## setup trajectory
   if(!is.null(user_trajectory) & (class(user_trajectory) %in% c("data.frame", "data.table"))){
+    if(b_verbose){
     message("cell population will be modelled based on provided trajectory")
+    }
     if(ncol(user_trajectory) != 4){
       stop("trajectory data frame should have 4 columns named as 'ts', 'target_pop_size', 'division_rate', 'compartment'")
     }
@@ -190,14 +194,11 @@ run_driver_process_sim=function(
   maxdrivers=dpcpd*get_max_popsize_from_trajectory(simpop,user_trajectory)*nsd
   ##Add 10 sd as insurance  (assume poisson variance)
   maxdrivers=max(1000,ceiling(maxdrivers+10*sqrt(maxdrivers)))
-  
-  
   ## setup fitness coefficients
   fitness_gen=fitnessGen ## Keeping backward compatibility with parameter neame
   drivers_fitness=fitness_gen
   if(class(drivers_fitness)=="function"){
     ##backward compatibility
-    #warning("Deprecation warning:drivers_fitness should now be a vector of fitness coefficients")
     test=drivers_fitness()
     if(length(test)==1){
       fitness_gen=sapply(1:maxdrivers,function(dummy) drivers_fitness())
@@ -206,38 +207,30 @@ run_driver_process_sim=function(
     }
   }else{
     stop("Please supply function for generating a single selection coefficient")
-    #if(length(drivers_fitness)<2e5){
-    #driversFitness=c(driversFitness,rep(0,1e5-length(driversFitness)))
-    #stop("Please provide at least 200,000 driver fitness values")
-    #}
   }
-  
-  
-  
+  ###browser()
   if(is.null(simpop)){
     
     params=list(n_sim_days=user_trajectory$ts[1],  ##This is the longest that the simulation will continue
                 b_stop_at_pop_size=0,
                 b_stop_if_empty=0,
                 driver_rate_per_cell_per_day=dpcpd)
-    cfg=getDefaultConfig(user_trajectory$target_pop_size[1],rate=user_trajectory$division_rate[1],
-                         ndriver=1,basefit = 0)
+    #cfg=getDefaultConfig(user_trajectory$target_pop_size[1],rate=user_trajectory$division_rate[1],
+    #                     ndriver=1,basefit = 0)
     cfg2=getDefaultConfig(user_trajectory$target_pop_size[1],rate=initial_division_rate,
                           ndriver=1,basefit = 0)
     params2=params
     params2$b_stop_at_pop_size=1
-    tree0=sim_pop(NULL,params=params2,cfg2,driversFitness = fitness_gen)
+    tree0=sim_pop(NULL,params=params2,cfg2,driversFitness = fitness_gen,b_verbose = b_verbose)
     #if(tree0$status==1){
     maxd=max(1,tree0$maxDriverID)
     params$n_sim_days=max(tree0$timestamp)
-    tree0=sim_pop(tree0,params=params,cfg,b_verbose = FALSE, trajectory=user_trajectory,#[2:nrow(user_trajectory),],
+    cfg=tree0$cfg
+    cfg$compartment$rate[2]=user_trajectory$division_rate[1]
+    cfg$compartment$popsize[2]=user_trajectory$target_pop_size[1]
+    tree0=sim_pop(tree0,params=params,cfg,b_verbose = b_verbose, trajectory=user_trajectory,#[2:nrow(user_trajectory),],
                   driversFitness=fitness_gen[-(1:maxd)])
-    #}
-    
   }else{
-    #message("simpop object alredy exist! use continue_driver_process_sim() function instead")
-    # I should call continue_driver_process_sim() function instead
-    #continue_driver_process_sim(simpop,nyears,fitness_gen, user_trajectory,drivers_per_year)
     params=list(n_sim_days=max(simpop$timestamp),  ##This is the longest that the simulation will continue
                 b_stop_at_pop_size=0,
                 b_stop_if_empty=0,
@@ -255,36 +248,10 @@ run_driver_process_sim=function(
       cfg$compartment$rate[idx]=utf$rate
       cfg$compartment$popsize[idx]=utf$popsize
     }
-    #browser()
-    tree0=sim_pop(simpop,params=params,cfg,b_verbose = FALSE, trajectory=user_trajectory,#[2:nrow(user_trajectory),],
+    tree0=sim_pop(simpop,params=params,cfg,b_verbose = b_verbose, trajectory=user_trajectory,#[2:nrow(user_trajectory),],
                   driversFitness=fitness_gen)
   }
-  #  }else{
-  #    
   
-  #    nsd=nyears*365
-  #    user_trajectory = data.frame(ts=c(nsd, nsd), target_pop_size=c(target_pop_size, target_pop_size),
-  #                                 division_rate=c(initial_division_rate, final_division_rate), compartment=c(1,1))
-  #    
-  #    cfg=getDefaultConfig(user_trajectory$target_pop_size[1],rate=user_trajectory$division_rate[1],
-  #                         ndriver=1,basefit = 0)
-  #    params=list(n_sim_days=user_trajectory$ts[1],
-  #                b_stop_at_pop_size=1,
-  #                b_stop_if_empty=0,
-  #                driver_rate_per_cell_per_day=dpcpd)
-  #    drivers_fitness=fitness_gen
-  #    # fitnessD=fitness_gen
-  #    tree0=sim_pop(NULL,params=params,cfg,driversFitness = fitness_gen[1:100000])
-  #    if(tree0$status==1){
-  #      ##  Ended at initial pop size..  
-  #      params$b_stop_at_pop_size=0
-  #      cfg$compartment$rate[2]=final_division_rate
-  #      tree0=sim_pop(tree0,params=params,cfg, trajectory=user_trajectory[2:nrow(user_trajectory),],
-  #                  driversFitness = fitness_gen[-(1:100000)])
-  #    }else{
-  #      browser()
-  #    }
-  #  }
   
   tree0
   return(tree0)
@@ -504,8 +471,9 @@ add_driver=function(simpop,params,acceptance_threshold=0.05){
 #'
 #' @param simpop - Rate of symmetric cell division during development
 #' @param initial_division_rate - Rate of symmetric cell division once population equilibrium is reached.
-#' @param trajectory - data.frame - with fields ts(timestamp in days),target_pop_size,division_rate
+#' @param trajectory - data.frame - with fields ts(timestamp in days),target_pop_size,division_rate, compartment.
 #' @param nyears - Total number of years to run the simulation
+#' @param b_verbose - FALSE or 0 for silence. 1 for progress per year. 2 to report all changes to target population size
 #' @return simpop object.
 #' @export
 #' @examples
@@ -514,52 +482,14 @@ add_driver=function(simpop,params,acceptance_threshold=0.05){
 #' trajectory$target_pop_size[11:15]=0.2*trajectory$target_pop_size[11:15]
 #' sp=run_neutral_trajectory(NULL,0.5,trajectory)
 #' plot(sp)
-run_neutral_trajectory=function(simpop,initial_division_rate,trajectory){
-  if(any(trajectory$division_rate>1)){
-    stop("Supplied division rate too high; should be less than 1.0")
+run_neutral_trajectory=function(simpop,initial_division_rate,trajectory,b_verbose=1){
+  if(is.null(trajectory$compartment)){
+    trajectory=trajectory %>% mutate(compartment=1)
   }
-  if(any(trajectory$target_pop_size>20e6)){
-    stop("Supplied population too high; should be less than 20e6")
-  }
-  if(any(trajectory$target_pop_size<2)){
-    stop("Supplied population too low; should be more than 1")
-  }
-  if(any(is.na(trajectory$target_pop_size)) || any(is.na(trajectory$ts))|| any(is.na(trajectory$division_rate))){
-    stop("trajectory should contain no missing data")
-  }
-  params=list(n_sim_days=trajectory$ts[1],##This is the longest that the simulation will continue
-              b_stop_at_pop_size=1,
-              b_stop_if_empty=0
-  )
-  #browser()
-  if(is.null(simpop)){
-    cfg=getDefaultConfig(target_pop_size = trajectory$target_pop_size[1],rate = initial_division_rate,basefit = 0,ndriver = 1)
-    
-    
-    sp=sim_pop(NULL,params=params,cfg,b_verbose = FALSE)
-    idx=1
-  }else{
-    maxt=max(simpop$timestamp)
-    idx=which(trajectory$ts>maxt)
-    if(length(idx)>0){
-      idx=idx[1]
-    }else{
-      idx=1
-    }
-    
-    sp=simpop
-  }
-  
-  params[["b_stop_at_pop_size"]]=0
-  for(i in idx:(length(trajectory$ts)-1)){
-    cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,trajectory$division_rate[i]),popsize=c(1,trajectory$target_pop_size[i])),
-             info=sp$cfg$info)
-    cfg=getDefaultConfig(target_pop_size = trajectory$target_pop_size[i],rate = trajectory$division_rate[i],basefit = 0,ndriver = 1)
-    params[["n_sim_days"]]=max(sp$timestamp+1,trajectory$ts[i+1]) #occasionally the current simulation finishes after the next target date - skip here.
-    spx=sim_pop(get_tree_from_simpop(sp),params=params,cfg,b_verbose = FALSE)
-    sp=spx  #sp=combine_simpops(sp,spx)
-  }
+  sp=run_driver_process_sim(simpop = simpop,initial_division_rate = initial_division_rate,user_trajectory = trajectory,
+                         fitnessGen = function(){0},drivers_per_cell_per_day = 0,b_verbose=b_verbose)
   sp
+  
 }
 
 
@@ -588,7 +518,7 @@ convert_annualS_to_s=function(S,divrate){
 
 getSingleDriverCount=function(sim){
   if(length(which(sim$events$driverid>0))>0){
-    sim$cfg$info$population[3]
+    sim$cfg$info$population[which.max(sim$cfg$info$fitness)]
   }else{
     0
   }
