@@ -172,7 +172,20 @@ legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
 st=get_subsampled_tree(sp,100)
 plot_tree(get_elapsed_time_tree(st),cex.label = 0)
 ```
+## Neutral simulation with a trajectory and a non-zero death rate
+By default during the growth phase of the simulation the population is a pure birth process until the target population is hit at which point the aggregate death rate is set to match the aggregate birth rate. A death rate (less than birth rate) can also be specified in the trajectory and the population will then stochastically grow exponentially towards the target following a birth-death process.
 
+```{r neutwithtrajdr, dev.args=list(pointsize=8),fig.height=5,fig.width=10}
+trajectory=data.frame(ts=c(70,400),target_pop_size=c(1e4,1e4),division_rate=c(0.06,0.06),death_rate=c(0.05,0.05))
+print(head(trajectory))
+sp=run_neutral_trajectory(NULL,initial_division_rate = 0.1,trajectory = trajectory)
+plot(sp)
+lines(trajectory$ts,trajectory$target_pop_size,col="red")
+legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
+abline(v=trajectory$ts,lwd=2,col="blue")
+st=get_subsampled_tree(sp,200)
+plot_tree(get_elapsed_time_tree(st),cex.label = 0)
+```
 
 ## Multiple drivers
 

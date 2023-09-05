@@ -134,7 +134,7 @@ get_elapsed_time_tree
 #>     }
 #>     tree
 #> }
-#> <bytecode: 0x122f4e0e0>
+#> <bytecode: 0x1344cf1c8>
 #> <environment: namespace:rsimpop>
 sampledtree1m=get_elapsed_time_tree(sampledtree1,mutrateperdivision=1,backgroundrate=15/365)
 ```
@@ -256,7 +256,7 @@ run_neutral_sim
 #>     adult1 = sim_pop(growthphase, params = params, cfg)
 #>     return(adult1)
 #> }
-#> <bytecode: 0x127c4fa00>
+#> <bytecode: 0x145dcc960>
 #> <environment: namespace:rsimpop>
 testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
 #> n_sim_days: 3650
@@ -652,6 +652,66 @@ plot_tree(get_elapsed_time_tree(st),cex.label = 0)
     #> 
     #> Rooted; includes branch lengths.
 
+## Neutral simulation with a trajectory and a non-zero death rate
+
+By default during the growth phase of the simulation the population is a
+pure birth process until the target population is hit at which point the
+aggregate death rate is set to match the aggregate birth rate. A death
+rate (less than birth rate) can also be specified in the trajectory and
+the population will then stochastically grow exponentially towards the
+target following a birth-death process.
+
+``` r
+trajectory=data.frame(ts=c(70,400),target_pop_size=c(1e4,1e4),division_rate=c(0.06,0.06),death_rate=c(0.05,0.05))
+print(head(trajectory))
+#>    ts target_pop_size division_rate death_rate
+#> 1  70           10000          0.06       0.05
+#> 2 400           10000          0.06       0.05
+sp=run_neutral_trajectory(NULL,initial_division_rate = 0.1,trajectory = trajectory)
+#> cell population will be modelled based on provided trajectory
+#> n_sim_days: 70
+#> b_stop_if_empty: 0
+#> b_stop_at_pop_size: 1
+#> maxt: 0
+#> driver_rate_per_cell_per_day: 0
+#> max_driver_count: -1
+#> MAX_EVENTS= 140 
+#> MAX_SIZE= 30003 
+#> n_sim_days: 70.0151374827015
+#> b_stop_if_empty: 0
+#> b_stop_at_pop_size: 0
+#> maxt: 70.0151374827015
+#> driver_rate_per_cell_per_day: 0
+#> max_driver_count: -1
+#> MAX_EVENTS= 800 
+#> MAX_SIZE= 30103
+plot(sp)
+lines(trajectory$ts,trajectory$target_pop_size,col="red")
+legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
+abline(v=trajectory$ts,lwd=2,col="blue")
+```
+
+<img src="man/figures/README-neutwithtrajdr-1.png" width="100%" />
+
+``` r
+st=get_subsampled_tree(sp,200)
+#> Starting checking the validity of tmp...
+#> Found number of tips: n = 201 
+#> Found number of nodes: m = 200 
+#> Done.
+plot_tree(get_elapsed_time_tree(st),cex.label = 0)
+```
+
+<img src="man/figures/README-neutwithtrajdr-2.png" width="100%" />
+
+    #> 
+    #> Phylogenetic tree with 201 tips and 200 internal nodes.
+    #> 
+    #> Tip labels:
+    #>   s1, s2, s3, s4, s5, s6, ...
+    #> 
+    #> Rooted; includes branch lengths.
+
 ## Multiple drivers
 
 Multiple drivers can be generated at a specified rate so the waiting
@@ -693,17 +753,21 @@ Look at the final per driver counts
 print(dps$cfg$info %>% filter(population>0))
 #>    population val    fitness id driver1
 #> 1           1   0 0.00000000  0       0
-#> 2       89641   1 0.00000000  0       0
-#> 3        4221   1 0.10617350 21       0
-#> 4        2212   1 0.11414951 27       0
-#> 5           2   1 0.09108533 75       0
-#> 6        3332   1 0.09078502  7       0
-#> 7         542   1 0.08909743 38       0
-#> 8          14   1 0.18729498 63       0
-#> 9           2   1 0.17517448 84       0
-#> 10         30   1 0.08297626 59       0
-#> 11          5   1 0.10511988 77       0
-#> 12         24   1 0.09144080 70       0
+#> 2       88200   1 0.00000000  0       0
+#> 3        2576   1 0.11060873  8       0
+#> 4        3858   1 0.11054592 20       0
+#> 5         787   1 0.08258794 26       0
+#> 6        2661   1 0.09181864  6       0
+#> 7         615   1 0.09714999 28       0
+#> 8         698   1 0.08010027 37       0
+#> 9           4   1 0.10144519 51       0
+#> 10        403   1 0.19702666 44       0
+#> 11        120   1 0.10807601 41       0
+#> 12         10   1 0.11772413 76       0
+#> 13         15   1 0.17391097 62       0
+#> 14          4   1 0.28992034 83       0
+#> 15         16   1 0.12372851 60       0
+#> 16         48   1 0.11243198 61       0
 ```
 
 Plot an example sampled tree
