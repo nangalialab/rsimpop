@@ -32,6 +32,7 @@ public:
 				double * trajectoryTs,  //trajectoryYear
 				int * trajectoryPop,
 				double * trajectoryDivRate,
+				double * trajectoryDeathRate,
 				int * trajectoryCompartment,
 				int trajectorySize,
 				int maxSize,double * fitnessDistribution, 
@@ -94,7 +95,7 @@ private:
 	int nAddedDrivers=0;
 	int bVerbose=1;
 	vector<tuple<double,int,int>> populationTrace;///TODO implement at compartment/driver level
-	std::stack<tuple<double,int,double,int>> trajectoryStack;
+	std::stack<tuple<double,int,double,int,double>> trajectoryStack;
 	int lastDriverID=0;
 	std::stack<double> driverFitnessStack;
 };

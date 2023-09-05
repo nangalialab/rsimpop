@@ -1,4 +1,4 @@
-29/06/2023
+05/09/2023
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -65,7 +65,7 @@ sp=sim_pop(NULL,params=list(n_sim_days=365*2,b_stop_at_pop_size=1),cfg=cfg)
 #> MAX_EVENTS= 1460 
 #> MAX_SIZE= 150003
 ##Look at the population size trajectory
-plot.simpop(sp)
+plot(sp)
 ```
 
 <img src="man/figures/README-zygote-1.png" width="100%" />
@@ -134,7 +134,7 @@ get_elapsed_time_tree
 #>     }
 #>     tree
 #> }
-#> <bytecode: 0x127664518>
+#> <bytecode: 0x122f4e0e0>
 #> <environment: namespace:rsimpop>
 sampledtree1m=get_elapsed_time_tree(sampledtree1,mutrateperdivision=1,backgroundrate=15/365)
 ```
@@ -171,16 +171,16 @@ print(sampledtree1a$events)
 #>    value driverid node       ts uid
 #> 1      0        0    1   0.0000   0
 #> 2      1        0  103   0.0000   1
-#> 3      2        0    4 135.4454   2
-#> 4      2        0    8 135.4454   3
-#> 5      2        0   11 135.4454   4
-#> 6      2        0   14 135.4454   5
-#> 7      2        0   38 135.4454   6
-#> 8      2        0   54 135.4454   7
-#> 9      2        0   80 135.4454   8
-#> 10     2        0   81 135.4454   9
-#> 11     2        0   90 135.4454  10
-#> 12     2        0   96 135.4454  11
+#> 3      2        0   12 123.3047   2
+#> 4      2        0   13 123.3047   3
+#> 5      2        0   23 123.3047   4
+#> 6      2        0   47 123.3047   5
+#> 7      2        0   50 123.3047   6
+#> 8      2        0   53 123.3047   7
+#> 9      2        0   74 123.3047   8
+#> 10     2        0   76 123.3047   9
+#> 11     2        0   89 123.3047  10
+#> 12     2        0   91 123.3047  11
 ```
 
 The occurence of such events for such sub-sampled trees can be
@@ -209,12 +209,12 @@ sp2=sim_pop(sampledtree1a,params=list(n_sim_days=365*10),cfg=sampledtree1a$cfg)
 #> n_sim_days: 3650
 #> b_stop_if_empty: 0
 #> b_stop_at_pop_size: 0
-#> maxt: 135.445371986415
+#> maxt: 123.304740911117
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 7300 
 #> MAX_SIZE= 300003
-plot.simpop(sp2)
+plot(sp2)
 ```
 
 <img src="man/figures/README-simagain-1.png" width="100%" />
@@ -256,7 +256,7 @@ run_neutral_sim
 #>     adult1 = sim_pop(growthphase, params = params, cfg)
 #>     return(adult1)
 #> }
-#> <bytecode: 0x111dcbdf0>
+#> <bytecode: 0x127c4fa00>
 #> <environment: namespace:rsimpop>
 testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
 #> n_sim_days: 3650
@@ -270,12 +270,12 @@ testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
 #> n_sim_days: 3650
 #> b_stop_if_empty: 0
 #> b_stop_at_pop_size: 0
-#> maxt: 81.542770079283
+#> maxt: 80.2098198104107
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 7300 
 #> MAX_SIZE= 3003
-plot.simpop(testing)
+plot(testing)
 ```
 
 <img src="man/figures/README-rneutw-1.png" width="100%" />
@@ -321,7 +321,7 @@ selsim=run_selection_sim(0.05,1/(2*190),target_pop_size = 5e4,nyears = 50,fitnes
 #> n_sim_days: 5475
 #> b_stop_if_empty: 0
 #> b_stop_at_pop_size: 0
-#> maxt: 218.753046237393
+#> maxt: 220.952315399144
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 10950 
@@ -329,190 +329,47 @@ selsim=run_selection_sim(0.05,1/(2*190),target_pop_size = 5e4,nyears = 50,fitnes
 #> No driver found: tries= 0 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
+#> 2       50011   1     0.0  0       0
 #> 21          1   1     0.3  1       1
 #> n_sim_days: 18250
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
+#> maxt: 5475.00243204044
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
+#> MAX_SIZE= 150039 
 #> No driver found: tries= 1 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
+#> 2       50011   1     0.0  0       0
 #> 21          1   1     0.3  1       1
 #> n_sim_days: 18250
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
+#> maxt: 5475.00243204044
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
+#> MAX_SIZE= 150039 
 #> No driver found: tries= 2 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
+#> 2       50011   1     0.0  0       0
 #> 21          1   1     0.3  1       1
 #> n_sim_days: 18250
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
+#> maxt: 5475.00243204044
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 3 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 4 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 5 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 6 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 7 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 8 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 9 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 10 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 11 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 12 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003 
-#> No driver found: tries= 13 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       49946   1     0.0  0       0
-#> 21          1   1     0.3  1       1
-#> n_sim_days: 18250
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.00048670303
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003
+#> MAX_SIZE= 150039
 print(selsim$cfg$info)
 #>   population val fitness id driver1
 #> 1          1   0     0.0  0       0
-#> 2      12291   1     0.0  0       0
-#> 3      37727   1     0.3  1       0
+#> 2      45521   1     0.0  0       0
+#> 3       4504   1     0.3  1       0
 ```
 
 Plot example sampled trees using various brach length models (or
@@ -527,8 +384,8 @@ seltree100=get_subsampled_tree(selsim,100)
 print(seltree100$cfg$info)
 #>   population val fitness id driver1
 #> 1          1   0     0.0  0       0
-#> 2         26   1     0.0  0       0
-#> 3         74   1     0.3  1       0
+#> 2         95   1     0.0  0       0
+#> 3          5   1     0.3  1       0
 plot_tree_events(seltree100,cex.label = 0);title("Selection Based Tree: Branch Length=#Self Renewal Divisions")
 #> 
 #> Phylogenetic tree with 101 tips and 100 internal nodes.
@@ -596,7 +453,7 @@ tselsim=run_transient_selection(0.05,1/(2*190),target_pop_size = 5e4,nyears_driv
 #> n_sim_days: 5475
 #> b_stop_if_empty: 0
 #> b_stop_at_pop_size: 0
-#> maxt: 260.951323686366
+#> maxt: 213.631482316392
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 10950 
@@ -604,193 +461,115 @@ tselsim=run_transient_selection(0.05,1/(2*190),target_pop_size = 5e4,nyears_driv
 #> No driver found: tries= 0 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 1 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 2 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 3 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 4 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 5 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 6 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> No driver found: tries= 7 
 #>    population val fitness id driver1
 #> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
+#> 2       50017   1     0.0  0       0
 #> 21          1   1     0.5  1       1
 #> n_sim_days: 10950
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
+#> maxt: 5475.00435862613
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
-#> No driver found: tries= 8 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
-#> 21          1   1     0.5  1       1
-#> n_sim_days: 10950
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
-#> No driver found: tries= 9 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
-#> 21          1   1     0.5  1       1
-#> n_sim_days: 10950
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
-#> No driver found: tries= 10 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
-#> 21          1   1     0.5  1       1
-#> n_sim_days: 10950
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
-#> No driver found: tries= 11 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
-#> 21          1   1     0.5  1       1
-#> n_sim_days: 10950
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
-#> No driver found: tries= 12 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
-#> 21          1   1     0.5  1       1
-#> n_sim_days: 10950
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
-#> No driver found: tries= 13 
-#>    population val fitness id driver1
-#> 1           1   0     0.0  0       0
-#> 2       50016   1     0.0  0       0
-#> 21          1   1     0.5  1       1
-#> n_sim_days: 10950
-#> b_stop_if_empty: 1
-#> b_stop_at_pop_size: 0
-#> maxt: 5475.01064372538
-#> driver_rate_per_cell_per_day: 0
-#> max_driver_count: -1
-#> MAX_EVENTS= 21900 
-#> MAX_SIZE= 150054 
+#> MAX_SIZE= 150057 
 #> n_sim_days: 18250
 #> b_stop_if_empty: 1
 #> b_stop_at_pop_size: 0
-#> maxt: 10950.0010277482
+#> maxt: 10950.0041428909
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 36500 
-#> MAX_SIZE= 150003
+#> MAX_SIZE= 150039
 tseltree200=get_subsampled_tree(tselsim,200)
 #> Starting checking the validity of tmp...
 #> Found number of tips: n = 201 
@@ -839,15 +618,15 @@ sp=run_neutral_trajectory(NULL,0.5,trajectory)
 #> max_driver_count: -1
 #> MAX_EVENTS= 730 
 #> MAX_SIZE= 150303 
-#> n_sim_days: 21.5337645962192
+#> n_sim_days: 20.7643134339581
 #> b_stop_if_empty: 0
 #> b_stop_at_pop_size: 0
-#> maxt: 21.5337645962192
+#> maxt: 20.7643134339581
 #> driver_rate_per_cell_per_day: 0
 #> max_driver_count: -1
 #> MAX_EVENTS= 58400 
 #> MAX_SIZE= 306103
-plot.simpop(sp,xlim=c(0,100))
+plot(sp,xlim=c(0,100))
 lines(trajectory$ts/365,trajectory$target_pop_size,col="red")
 legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
 ```
@@ -914,18 +693,17 @@ Look at the final per driver counts
 print(dps$cfg$info %>% filter(population>0))
 #>    population val    fitness id driver1
 #> 1           1   0 0.00000000  0       0
-#> 2       69389   1 0.00000000  0       0
-#> 3        3972   1 0.09361657 10       0
-#> 4        3253   1 0.08308200 15       0
-#> 5        6529   1 0.14679795 24       0
-#> 6           7   1 0.08460797 73       0
-#> 7       15829   1 0.13990149 19       0
-#> 8           3   1 0.24989646 78       0
-#> 9           1   1 0.08409209 75       0
-#> 10          2   1 0.10150523 77       0
-#> 11        773   1 0.10186660 38       0
-#> 12        216   1 0.09981411 39       0
-#> 13          1   1 0.11066356 79       0
+#> 2       89641   1 0.00000000  0       0
+#> 3        4221   1 0.10617350 21       0
+#> 4        2212   1 0.11414951 27       0
+#> 5           2   1 0.09108533 75       0
+#> 6        3332   1 0.09078502  7       0
+#> 7         542   1 0.08909743 38       0
+#> 8          14   1 0.18729498 63       0
+#> 9           2   1 0.17517448 84       0
+#> 10         30   1 0.08297626 59       0
+#> 11          5   1 0.10511988 77       0
+#> 12         24   1 0.09144080 70       0
 ```
 
 Plot an example sampled tree
@@ -1012,7 +790,7 @@ trajectory$target_pop_size[21:25]=0.2*trajectory$target_pop_size[21:25]
 dps=run_driver_process_sim(initial_division_rate=0.1,user_trajectory=trajectory, target_pop_size = 1e5,nyears = 80,
                            fitnessGen=fitnessExpFn,drivers_per_cell_per_day = 1/(365*1e5))
 
-plot.simpop(dps,xlim=c(0,100))
+plot(dps,xlim=c(0,100))
 lines(trajectory$ts/365,trajectory$target_pop_size,col="red")
 legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
 ```

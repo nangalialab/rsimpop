@@ -14,8 +14,8 @@
 #include "Event.h"
 using namespace std;
 const int MAX_NUM_ADDED_DRIVERS=100000;
-CellCompartment::CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID): 
-                                 id(id),mTargetPopSize(targetPopSize),mDivisionRate(divisionRate) {  
+CellCompartment::CellCompartment(int id,int targetPopSize,double divisionRate,double deathRate,std::vector<std::pair<double,int>> fitnessID): 
+                                 id(id),mTargetPopSize(targetPopSize),mDivisionRate(divisionRate),mDeathRate(deathRate) {  
   nsub=fitnessID.size();
   for(int i=0;i<nsub;i++){
     idxByID[fitnessID[i].second]=i;
@@ -165,6 +165,23 @@ double CellCompartment::getTotalDivisionRate(){
 	return tot;
 }
 
+double CellCompartment::getTotalDeathRate(){
+  if(mDivisionRate<0){
+    return 0.0;
+  }
+  double tot=0.0;
+  int i;
+  int ii;
+  for(i=0;i<numNonEmptyCompartments;i++){
+    ii=nonEmptyCompartmentIndices[i];
+    tot+=mDeathRate*subCompartments[ii].size();
+  }
+  return tot;
+}
+
+
+
+
 
 double CellCompartment::getTotalRate(){
 	double tot=mTotalDivRate+mTotalDeathRate;
@@ -173,15 +190,17 @@ double CellCompartment::getTotalRate(){
 		throw "getTotalRate: UnexpectedNegative";
 
 	}
-	if(atEquilibrium){
+//	if(atEquilibrium){
 		return mTotalDivRate+mTotalDeathRate;
-	}else{
+	//}else{
 	  //Following means we have pure exponential growth until equilibrium
-		return mTotalDivRate;
-	}
+		//return mTotalDivRate+mTotalDeathRate;
+	//}
 }
 
 void CellCompartment::setRates(){
+  double totalDeathRate=0.0;
+  double tol=1e-6;
 	//We want 20% (alpha) of the deviation to go per day - so rate_delta needs to be rate_delta=0.05*pop_delta
 	//printf("In set rates\n");
 	if(!active){
@@ -190,8 +209,24 @@ void CellCompartment::setRates(){
 	}else{
 
 		mTotalDivRate=getTotalDivisionRate();
-		double tmp=(mTotalDivRate-alpha*(mTargetPopSize-totalpop));
-		mTotalDeathRate=tmp>0?tmp:0.0;
+	  totalDeathRate=getTotalDeathRate();
+	  if(totalDeathRate>mTotalDivRate){
+	    throw "deathRate: Should be <= divrate!";
+	  }
+	  // if we are within 1% of the target population size or above the target then actively change death rate
+	  // to target the population size
+	  double targetTolerance=0.01;
+	  if(totalDeathRate<tol && !atEquilibrium){
+	    mTotalDeathRate=0.0;
+	    return;
+	  }
+	  if(atEquilibrium && totalpop>(1-targetTolerance)*mTargetPopSize){
+      // Actively target population if at
+	    double tmp=(mTotalDivRate-alpha*(mTargetPopSize-totalpop));
+	    mTotalDeathRate=tmp>0?tmp:0.0;
+	    return;
+	  }
+	  mTotalDeathRate=totalDeathRate;
 	}
 }
 

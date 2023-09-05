@@ -37,11 +37,12 @@ private:
 
 
 public:
-	CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID);  //,
+	CellCompartment(int id,int targetPopSize,double divisionRate,double deathRate,std::vector<std::pair<double,int>> fitnessID);  //,
 	virtual ~CellCompartment();
 	int id;
 	int mTargetPopSize;
 	double mDivisionRate;
+	double mDeathRate;
 	double mTotalDivRate=0.0;
 	double mTotalDeathRate=0.0;
 	int mindexInFitnessDistro; 
@@ -54,6 +55,7 @@ public:
 	void addNode(shared_ptr<PhyloNode> node,int subid);
 	double getTotalRate();
 	double getTotalDivisionRate();
+	double getTotalDeathRate();
 	void setRates();
 	void setNumNonEmptyIndices();
 	int getSub(int ID);

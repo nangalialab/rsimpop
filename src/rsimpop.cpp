@@ -27,12 +27,14 @@ extern "C" {
 void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cellCompartments,
 		int * eventnode,double * eventts,int * eventval,int * eventdriverid,int * eventuid,
 		int * nevents,int * compinfoval,double * compinfofitness,
-		int * ncomp,int* compartmentsize,double * compartmentrate,
+		int * ncomp,int* compartmentsize,double * compartmentrate,double * compartmentdeathrate,
 		int * compartmentval,int * ncompartment,int * driverid, double * fitnessDistribution, int * ndriverevents,int * driverFitnessSize){   //
+  
+  //printf("checkpoint 1\n");
 	for(int i=0;i<*nevents;i++){
 		events.push_back(Event(eventnode[i],eventts[i],eventval[i],eventdriverid[i],eventuid[i]));
 	}
-		
+	//printf("checkpoint 2\n");
 	std::map<int, vector<std::pair<double,int>>> fitnessByCompartment;
 	for(int i=0;i<*ncomp;i++){
 		auto it=fitnessByCompartment.find(compinfoval[i]);
@@ -44,8 +46,9 @@ void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cel
 		fitnessByCompartment[compinfoval[i]].push_back(std::pair<double,int>(compinfofitness[i],driverid[i]));
 
 	}
-	
+	//printf("checkpoint 3 %d\n",*ncompartment);
 	for(int i=0;i<*ncompartment;i++){
+	  //printf("comp %d\n",i);
 		if(compartmentval[i]!=i){
 			printf("Should be contiguous %d %d\n",compartmentval[i],i);
 			throw "compartment should have contiguous ordered value 0..n";
@@ -54,6 +57,7 @@ void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cel
 		cellCompartments.push_back(std::make_shared<CellCompartment>(CellCompartment(i,
 		compartmentsize[i],
 		compartmentrate[i],
+    compartmentdeathrate[i],      
 		fitnessByCompartment[compartmentval[i]])));
 	}
 }
@@ -110,6 +114,7 @@ void sim_pop2(
 		int * nevents,
 		int * compartmentval,
 		double *  compartmentrate,
+		double * compartmentdeathrate,
 		int * compartmentsize,
 		int * ncompartment,
 		int * compinfoval,
@@ -125,6 +130,7 @@ void sim_pop2(
 		double * trajectoryTs,
 		int * trajectoryPop,
 		double * trajectoryDivRate,
+		double * trajectoryDeathRate,
 		int * trajectoryCompartment,
 		int * trajectorySize,
 		int * driverFitnessSize,
@@ -173,7 +179,7 @@ void sim_pop2(
 		vector<Event> events;
 		vector<shared_ptr<CellCompartment>> cellCompartments;
 		setSimData(events,cellCompartments,eventnode,eventts,eventval,eventdriverid,eventuid,nevents,compinfoval,compinfofitness,
-				ncomp,compartmentsize,compartmentrate,compartmentval,ncompartment,driverid,fitnessDistribution,nMaxPreviousDriverID,driverFitnessSize);  //
+				ncomp,compartmentsize,compartmentrate,compartmentdeathrate,compartmentval,ncompartment,driverid,fitnessDistribution,nMaxPreviousDriverID,driverFitnessSize);  //
 
 		CellSimulation sim(edges,
 				ndivs,
@@ -187,6 +193,7 @@ void sim_pop2(
 				trajectoryTs,  //trajectoryYear
 				trajectoryPop,
 				trajectoryDivRate,
+				trajectoryDeathRate,
 				trajectoryCompartment,
 				*trajectorySize,
 				*max_size,
@@ -245,6 +252,7 @@ void sub_sample(
 		int * nevents,
 		int * compartmentval,
 		double *  compartmentrate,
+		double* compartmentdeathrate,
 		int * compartmentsize,
 		int * ncompartment,
 		int * compinfoval,
@@ -259,6 +267,7 @@ void sub_sample(
 		double * trajectoryTs,
 		int * trajectoryPop,
 		double * trajectoryDivRate,
+		double * trajectoryDeathRate,
 		int * trajectoryCompartment,
 		int * trajectorySize,
 		int * driverFitnessSize,
@@ -289,7 +298,7 @@ void sub_sample(
 		vector<Event> events;
 		vector<shared_ptr<CellCompartment>> cellCompartments;
 		setSimData(events,cellCompartments,eventnode,eventts,eventval,eventdriverid,eventuid,nevents,compinfoval,compinfofitness,
-				ncomp,compartmentsize,compartmentrate,compartmentval,ncompartment,driverid,fitnessDistribution,ndriverevents,driverFitnessSize);   //,fitnessDistribution
+				ncomp,compartmentsize,compartmentrate,compartmentdeathrate,compartmentval,ncompartment,driverid,fitnessDistribution,ndriverevents,driverFitnessSize);   //,fitnessDistribution
 		
 		
 		
@@ -317,6 +326,7 @@ void sub_sample(
 				trajectoryTs,  //trajectoryYear
 				trajectoryPop,
 				trajectoryDivRate,
+				trajectoryDeathRate,
 				trajectoryCompartment,
 				*trajectorySize,
 				*max_size,

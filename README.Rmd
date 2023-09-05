@@ -55,7 +55,7 @@ print(cfg)
 ##Simulate for 2years..
 sp=sim_pop(NULL,params=list(n_sim_days=365*2,b_stop_at_pop_size=1),cfg=cfg)
 ##Look at the population size trajectory
-plot.simpop(sp)
+plot(sp)
 ##Subsample tree
 sampledtree1=get_subsampled_tree(sp,100)
 print(sampledtree1)
@@ -102,7 +102,7 @@ Recall that the config has already been updated with the target population sizes
 
 ```{r simagain,message=TRUE, dev.args=list(pointsize=8),fig.height=5,fig.width=10}
 sp2=sim_pop(sampledtree1a,params=list(n_sim_days=365*10),cfg=sampledtree1a$cfg)
-plot.simpop(sp2)
+plot(sp2)
 sampledtree2=get_subsampled_tree(sp2,100)
 plot_tree_events(sampledtree2,cex.label = 0.5)
 ```
@@ -112,7 +112,7 @@ plot_tree_events(sampledtree2,cex.label = 0.5)
 ```{r rneutw,dev.args=list(pointsize=8),fig.height=5,fig.width=10}
 run_neutral_sim
 testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
-plot.simpop(testing)
+plot(testing)
 st=get_subsampled_tree(testing,100)
 print(st$cfg$info)
 plot_tree_events(st,cex.label = 0);title("Phylogeny of 100 cells sampled from small population")
@@ -166,7 +166,7 @@ trajectory$target_pop_size[5:10]=2*trajectory$target_pop_size[5:10]
 trajectory$target_pop_size[11:15]=0.2*trajectory$target_pop_size[11:15]
 print(head(trajectory))
 sp=run_neutral_trajectory(NULL,0.5,trajectory)
-plot.simpop(sp,xlim=c(0,100))
+plot(sp,xlim=c(0,100))
 lines(trajectory$ts/365,trajectory$target_pop_size,col="red")
 legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
 st=get_subsampled_tree(sp,100)
@@ -245,7 +245,7 @@ trajectory$target_pop_size[21:25]=0.2*trajectory$target_pop_size[21:25]
 dps=run_driver_process_sim(initial_division_rate=0.1,user_trajectory=trajectory, target_pop_size = 1e5,nyears = 80,
                            fitnessGen=fitnessExpFn,drivers_per_cell_per_day = 1/(365*1e5))
 
-plot.simpop(dps,xlim=c(0,100))
+plot(dps,xlim=c(0,100))
 lines(trajectory$ts/365,trajectory$target_pop_size,col="red")
 legend("topright",c("Target","Actual"),col=c("red","black"),lwd=1)
 dpst=get_subsampled_tree(dps,200)

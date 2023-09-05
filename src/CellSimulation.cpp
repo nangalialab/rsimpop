@@ -29,6 +29,7 @@ CellSimulation::CellSimulation(int * edges,
 		double * trajectoryTs,
 		int * trajectoryPop,
 		double * trajectoryDivRate,
+		double * trajectoryDeathRate, // Todo replace with trajectory class
 		int * trajectoryCompartment,
 		int trajectorySize,
 		int maxSize,
@@ -40,11 +41,8 @@ CellSimulation::CellSimulation(int * edges,
 	//cout << "nrow trajectory: " << trajectorySize << endl;
 	if(trajectorySize>=1 && trajectoryTs[0]!=0){
 		for(int i=0;i<trajectorySize;i++){
-			trajectoryStack.push(tuple<double,int,double,int>(trajectoryTs[trajectorySize-1-i],trajectoryPop[trajectorySize-1-i],trajectoryDivRate[trajectorySize-1-i],
-			trajectoryCompartment[trajectorySize-1-i]));
-   			//mtrajectoryTs.push(trajectoryTs[i]);   //mtrajectoryYear
-   			//mtrajectoryPop.push(trajectoryPop[i]);
-   			//mtrajectoryDivRate.push(trajectoryDivRate[i]);
+			trajectoryStack.push(tuple<double,int,double,int,double>(trajectoryTs[trajectorySize-1-i],trajectoryPop[trajectorySize-1-i],trajectoryDivRate[trajectorySize-1-i],
+			trajectoryCompartment[trajectorySize-1-i],trajectoryDeathRate[trajectorySize-1-i]));
   		} 
 	}
 	//cout << "trajectory size in C++: " << trajectoryStack.size() << endl;
@@ -253,16 +251,17 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 		}
 		
 		while(currentTime>stopTime && !trajectoryStack.empty()){
-				std::tuple<double,int,double,int> newParam = trajectoryStack.top();
+				std::tuple<double,int,double,int,double> newParam = trajectoryStack.top();
 				int compartmentID = std::get<3>(newParam);
 				stopTime=std::get<0>(newParam);
 				//Logic is currently broken for multiple compartments - need a per compartment trajectory stack
 				if(currentTime<=stopTime){
 				  compartments[compartmentID]->mDivisionRate = std::get<2>(newParam);
 				  compartments[compartmentID]->mTargetPopSize = std::get<1>(newParam);
+				  compartments[compartmentID]->mDeathRate = std::get<4>(newParam);
 				  //stopTime = std::get<0>(newParam);
 				  if(bVerbose>1){
-				  printf("Updated params:t=%3.2f:till=%3.2f:comp=%d;rate=%5.6f:poptarget=%d\n",currentTime,stopTime,compartmentID,compartments[compartmentID]->mDivisionRate,compartments[compartmentID]->mTargetPopSize);
+				    printf("Updated params:t=%3.2f:till=%3.2f:comp=%d;rate=%5.6f:dr==%5.6f;poptarget=%d\n",currentTime,stopTime,compartmentID,compartments[compartmentID]->mDivisionRate,compartments[compartmentID]->mDeathRate,compartments[compartmentID]->mTargetPopSize);
 				  }
 				  trajectoryStack.pop();
 				}else{
@@ -542,7 +541,15 @@ void CellCompartment::doEvent(CellSimulation & sim){
 	if(numNonEmptyCompartments==0){
 		throw "Attempting to doEvent on empty compartment!";
 	}
-  if(atEquilibrium && rndGen->getUniform() < mTotalDeathRate/(mTotalDeathRate+mTotalDivRate)){
+  //if(atEquilibrium && rndGen->getUniform() < mTotalDeathRate/(mTotalDeathRate+mTotalDivRate)){
+  // remove atEquilibrium for a mo.
+  
+ /* int ct=round(sim.currentTime);
+  if( abs(sim.currentTime-ct)<0.001 && ct % 20 == 0){
+    printf("totals ts=%3.2f divr=%4.3f deathr=%4.3f dprob=%4.2f\n",sim.currentTime,mTotalDivRate,mTotalDeathRate,mTotalDeathRate/(mTotalDeathRate+mTotalDivRate));
+  }*/
+  
+  if(rndGen->getUniform() < mTotalDeathRate/(mTotalDeathRate+mTotalDivRate)){
 		// death/symmetric differentiation is the same across the board..
 		for(int i=0;i<numNonEmptyCompartments;i++){
 			prob[i]=subCompartments[nonEmptyCompartmentIndices[i]].size();
@@ -564,7 +571,7 @@ void CellCompartment::doEvent(CellSimulation & sim){
 		sim.recycle(node);
 
 	}else{
-    //Divide if not at equilibrium (we always approach equilibrium from underneath)
+    //Divide
 		int ii=0;
 		for(int i=0;i<numNonEmptyCompartments;i++){
 			ii=nonEmptyCompartmentIndices[i];

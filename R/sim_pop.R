@@ -45,7 +45,7 @@ initSimPop=function(seed,bForce=FALSE){
 #' growthphase=sim_pop(NULL,params=params,cfg)
 sim_pop=function(tree,
                  params=list(),
-                 cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,1/120.0),popsize=c(1,1e4)),
+                 cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,1/120.0),death_rate=c(0,0),popsize=c(1,1e4)),
                           info=data.frame(val=c(0,1,1),fitness=c(-1,0,0.2))),
                  b_verbose=1, 
                  b_check=FALSE,
@@ -54,14 +54,12 @@ sim_pop=function(tree,
                                        #will be picked.
 {
   toCombine=TRUE
-  ##browser()
   if(is.null(tree)){
     toCombine=FALSE
     tree=rtree(2)
     tree$edge.length=rep(0,2)
     tree$events=data.frame(value=0:1,driverid=c(0,0),node=1:2,ts=0.0,uid=0:1)
   }
-  #browser()
   # convert driversFitness into double to fit the input type for the C++ sim_pop() function
   if(is.null(driversFitness)){
     #driversFitness=-1.0
@@ -87,8 +85,6 @@ sim_pop=function(tree,
     max_initial_driverid=tree$maxDriverID
   }
   
-  
-  # print(tree$events)
   tree=standardiseTree(tree)  #populate the tree object with the #divisions (ndivs), the time (tBirth) and the maximum time (maxt)
   ndrivers=tree$ndrivers
   time=tree$tBirth
@@ -140,11 +136,15 @@ sim_pop=function(tree,
   compartment=cfg$compartment
   compartment$popsize=ceiling(compartment$popsize)
   compartmentinfo=cfg$info
+  if(is.null(compartment$death_rate)){
+    compartment$death_rate=0.0
+  }
+  
   #browser()
   # set the trajectory columns to 0 if user is not running run_driver_process_sim()
   if(is.null(trajectory)){
     trajectory_ts = 0; trajectory_pop = 0
-    trajectory_div_rate = 0; trajectory_size=0; trajectory_compartment=1
+    trajectory_div_rate = 0; trajectory_size=0; trajectory_compartment=1;trajectory_death_rate=0
     totalpop=max(sum(compartment$popsize),length(tree$tip.label))
     MAX_SIZE=3*totalpop ##Allows for stochastic drift in population size (need to make this robust)
     MAX_EVENTS=ceiling(2*params[["n_sim_days"]])
@@ -153,6 +153,7 @@ sim_pop=function(tree,
     trajectory_ts = trajectory$ts
     trajectory_pop = trajectory$target_pop_size  
     trajectory_div_rate = trajectory$division_rate
+    trajectory_death_rate = trajectory$death_rate
     trajectory_size = nrow(trajectory)
     trajectory_compartment = trajectory$compartment
     
@@ -164,21 +165,11 @@ sim_pop=function(tree,
     MAX_SIZE=ceiling(3*totalpop)+100 ##Allows for stochastic drift in population size (need to make this robust)
     MAX_EVENTS=ceiling(2*max(trajectory_ts))
   }
-  #browser()
-  # if(ndriver>1000){
-  #   stop("Too many drivers: edit CellSimulation::setCompartmentInfoRecursively in C++ to support more!")
-  # }
-  # totalpop=max(sum(compartment$popsize),length(tree$tip.label))
-  # MAX_SIZE=3*totalpop ##Allows for stochastic drift in population size (need to make this robust)
-  
-  # MAX_EVENTS=ceiling(2*params[["n_sim_days"]])
   
   if(b_verbose){
     cat("MAX_EVENTS=",MAX_EVENTS,"\n")
     cat("MAX_SIZE=",MAX_SIZE,"\n")
-    ## browser()
   }
-  #bverbose=ifelse(b_verbose,1,0)
   res=.C("sim_pop2",
          edges=as.integer(edges),
          ndivs=as.integer(ndivs),
@@ -193,6 +184,7 @@ sim_pop=function(tree,
          nevents=as.integer(nevents),
          compartmentval=as.integer(compartment$val),
          compartmentrate=as.double(compartment$rate),
+         compartmentdeathrate=as.double(compartment$death_rate),
          compartmentsize=as.integer(compartment$popsize),
          ncompartment=as.integer(length(unique(compartment$val))),
          compinfoval=as.integer(compartmentinfo$val),
@@ -208,6 +200,7 @@ sim_pop=function(tree,
          trajectoryTs = as.double(trajectory_ts),
          trajectoryPop = as.integer(trajectory_pop),
          trajectoryDivRate = as.double(trajectory_div_rate),
+         trajectoryDeathRate = as.double(trajectory_death_rate),
          trajectoryCompartment = as.integer(trajectory_compartment),
          trajectorySize = as.integer(trajectory_size),
          driverSize=as.integer(length(driversFitness)),
@@ -407,10 +400,10 @@ C_subsample_pop=function(tree,tips,trajectory=NULL){
   
   if(is.null(trajectory)){
     trajectory_ts = 0; trajectory_pop = 0
-    trajectory_div_rate = 0; trajectory_size=0; trajectory_compartment=1
+    trajectory_div_rate = 0; trajectory_death_rate = 0; trajectory_size=0; trajectory_compartment=1
   }else if(is.data.frame(trajectory) | is.data.table(trajectory)){
     trajectory_ts = trajectory$ts; trajectory_pop = trajectory$target_pop_size  
-    trajectory_div_rate = trajectory$division_rate; trajectory_size = nrow(trajectory)
+    trajectory_div_rate = trajectory$division_rate; trajectory_death_rate = trajectory$death_rate;trajectory_size = nrow(trajectory)
     trajectory_compartment = trajectory$compartment
   }
   
@@ -451,6 +444,7 @@ C_subsample_pop=function(tree,tips,trajectory=NULL){
          nevents=as.integer(nevents),
          compartmentval=as.integer(cfg$compartment$val),
          compartmentrate=as.double(cfg$compartment$rate),
+         compartmentdeathrate=as.double(0),
          compartmentsize=as.integer(cfg$compartment$popsize),
          ncompartment=as.integer(length(unique(cfg$compartment$val))),###
          compinfoval=as.integer(cfg$info$val),
@@ -465,6 +459,7 @@ C_subsample_pop=function(tree,tips,trajectory=NULL){
          trajectoryTs = as.double(trajectory_ts),
          trajectoryPop = as.double(trajectory_pop),
          trajectoryDivRate = as.double(trajectory_div_rate),
+         trajectoryDeathRate = as.double(trajectory_death_rate),
          trajectoryCompartment = as.integer(trajectory_compartment),
          trajectorySize = as.integer(trajectory_size),
          driversFitnessSize=as.integer(length(driversFitness)),
