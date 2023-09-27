@@ -238,10 +238,10 @@ void CellCompartment::setRates(){
 	    double incoming=0;
 	    // Following only works if the feeding compartments only only feed this compartment..
 	    for(pair<shared_ptr<CellCompartment>,double> otherCompartment : incomingAsymmetricDifferentiation){
-	      incoming+=otherCompartment.first->mTotalAsymmetricDivRate;
+	      incoming+=otherCompartment.first->mTotalAsymmetricDivRate*otherCompartment.second;
 	    }
 	    for(pair<shared_ptr<CellCompartment>,double> otherCompartment : incomingSymmetricDifferentiation){
-	      incoming+=2*otherCompartment.first->mTotalSymmetricDivRate;
+	      incoming+=2*otherCompartment.first->mTotalSymmetricDivRate*otherCompartment.second;
 	    }
 	    
       // Actively target a population size

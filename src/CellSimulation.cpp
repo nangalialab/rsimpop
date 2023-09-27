@@ -619,8 +619,17 @@ void CellCompartment::doEvent(CellSimulation & sim){
     auto children=sim.divide(parent);
     if((rnd<mTotalDeathRate+mTotalDivRate+mTotalAsymmetricDivRate)){
       subCompartments[i][k]=children.first;
-      if(asymmetricDifferentiation.size()==1){
-        int compid=asymmetricDifferentiation[0].first->id;
+      int compnum=0;
+      int nOut=asymmetricDifferentiation.size();
+      if(nOut>1){
+        //double rnd=totalRate*rndGen->getUniform();
+        double pp[nOut];
+        for(int j=0;j<nOut;j++){
+          pp[j]=asymmetricDifferentiation[j].second;
+        }
+        compnum=rndGen->sample(nOut,pp,false);
+      }
+        int compid=asymmetricDifferentiation[compnum].first->id;
         sim.compartments[compid]->active=true;
         sim.compartments[compid]->addNode(children.second,0);
         //printf("Doing transition %d:%d\n",this->id,compid);
@@ -629,11 +638,10 @@ void CellCompartment::doEvent(CellSimulation & sim){
         children.second->addEvent(thisEvent);
         sim.compartments[compid]->setNumNonEmptyIndices();
         sim.compartments[compid]->setRates();
-      }else{
-        throw "need to implement support for differentiation to multiple comparments.";
-      }
+      //}else{
+      //  throw "need to implement support for differentiation to multiple comparments.";
+      //}
     }else{
-      if(symmetricDifferentiation.size()==1){
         int sz=subCompartments[i].size();
         //remove it from the compartment...
         if(k==sz-1){
@@ -642,7 +650,18 @@ void CellCompartment::doEvent(CellSimulation & sim){
           subCompartments[i][k]=subCompartments[i][sz-1];
           subCompartments[i].pop_back();
         }
-        int compid=symmetricDifferentiation[0].first->id;
+        
+        int compnum=0;
+        int nOut=symmetricDifferentiation.size();
+        if(nOut>1){
+          //double rnd=totalRate*rndGen->getUniform();
+          double pp[nOut];
+          for(int j=0;j<nOut;j++){
+            pp[j]=symmetricDifferentiation[j].second;
+          }
+          compnum=rndGen->sample(nOut,pp,false);
+        }
+        int compid=symmetricDifferentiation[compnum].first->id;
         sim.compartments[compid]->active=true;
         // We're not really supporting differentiation to driver compartments.
         sim.compartments[compid]->addNode(children.first,0);
@@ -655,9 +674,6 @@ void CellCompartment::doEvent(CellSimulation & sim){
         sim.compartments[compid]->setNumNonEmptyIndices();
         sim.compartments[compid]->setRates();
         totalpop--;
-      }else{
-        throw "need to implement support for differentiation to multiple comparments.";
-      }
     }
   }
   if(!atEquilibrium && totalpop>=mTargetPopSize){

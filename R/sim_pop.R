@@ -153,7 +153,7 @@ sim_pop=function(tree,
     trajectory_a_div_rate2=0
     totalpop=max(sum(compartment$popsize),length(tree$tip.label))
     MAX_SIZE=3*totalpop +10000 ##Allows for stochastic drift in population size (need to make this robust)
-    MAX_EVENTS=ceiling(100*params[["n_sim_days"]])
+    MAX_EVENTS=ceiling(1000*params[["n_sim_days"]])
   }else if(is.data.frame(trajectory) || is.data.table(trajectory)){
     trajectory$target_pop_size=ceiling(trajectory$target_pop_size)
     trajectory_ts = trajectory$ts

@@ -112,11 +112,21 @@ void setMigrations(vector<shared_ptr<CellCompartment>> & cellCompartments,
                   double * srate,
                   int nmigration){
   // Add migration config to compartments
+  double totArate[100] ={};
+  double totSrate[100] ={};
+  map<int,double> totalSrate;
+  double tol=1e-8;
   for(int i=0;i<nmigration;i++){
     cellCompartments[c1[i]]->addSymmetricDifferentiationRate(cellCompartments[c2[i]],srate[i]);
     cellCompartments[c1[i]]->addAsymmetricDifferentiationRate(cellCompartments[c2[i]],arate[i]);
-    cellCompartments[c2[i]]->addIncomingSymmetricDifferentiationRate(cellCompartments[c1[i]],srate[i]);
-    cellCompartments[c2[i]]->addIncomingAsymmetricDifferentiationRate(cellCompartments[c1[i]],arate[i]);
+    totArate[c1[i]]+=arate[i];
+    totSrate[c1[i]]+=srate[i];
+  }
+  for(int i=0;i<nmigration;i++){
+    double s=totSrate[c1[i]]>tol?totSrate[c1[i]]:1.0;
+    double a=totArate[c1[i]]>tol?totArate[c1[i]]:1.0;
+    cellCompartments[c2[i]]->addIncomingSymmetricDifferentiationRate(cellCompartments[c1[i]],srate[i]/s);
+    cellCompartments[c2[i]]->addIncomingAsymmetricDifferentiationRate(cellCompartments[c1[i]],arate[i]/a);
   }
 }
 
