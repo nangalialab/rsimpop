@@ -113,8 +113,10 @@ void setMigrations(vector<shared_ptr<CellCompartment>> & cellCompartments,
                   int nmigration){
   // Add migration config to compartments
   for(int i=0;i<nmigration;i++){
-  //  cellCompartments[c1[i]]->addSymmetricDifferentiationRate(cellCompartments[c2[i]],srate[i]);
-  //  cellCompartments[c1[i]]->addAsymmetricDifferentiationRate(cellCompartments[c2[i]],arate[i]);
+    cellCompartments[c1[i]]->addSymmetricDifferentiationRate(cellCompartments[c2[i]],srate[i]);
+    cellCompartments[c1[i]]->addAsymmetricDifferentiationRate(cellCompartments[c2[i]],arate[i]);
+    cellCompartments[c2[i]]->addIncomingSymmetricDifferentiationRate(cellCompartments[c1[i]],srate[i]);
+    cellCompartments[c2[i]]->addIncomingAsymmetricDifferentiationRate(cellCompartments[c1[i]],arate[i]);
   }
 }
 
@@ -236,7 +238,7 @@ void sim_pop2(
 			throw "driverAcquisitionRate too high!";
 		}
 		int maxDriverCount=round(params[5]);
-		int nmigration=0;//params[6];
+		int nmigration=round(params[6]);
 		printf("nmigration=%d\n",nmigration);
 		vector<Event> events;
 		vector<shared_ptr<CellCompartment>> cellCompartments;
@@ -245,7 +247,7 @@ void sim_pop2(
 		
 		setSimData(events,cellCompartments,eventnode,eventts,eventval,eventdriverid,eventuid,nevents,compinfoval,compinfofitness,
 				ncomp,compartmentsize,compartmentrate,compartmentdeathrate,compartmentval,ncompartment,driverid,fitnessDistribution,nMaxPreviousDriverID,driverFitnessSize);  //
-		//setMigrations(cellCompartments,c1,c2,arate,srate,nmigration);
+		setMigrations(cellCompartments,c1,c2,arate,srate,nmigration);
 		CellSimulation sim(edges,
 				ndivs,
 				tBirth,

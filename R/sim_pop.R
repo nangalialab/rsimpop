@@ -186,7 +186,7 @@ sim_pop=function(tree,
     srate=cfg$migrations$srate
     nmigration=nrow(cfg$migrations)
   }
-  ##params[["nmigration"]]=nmigration
+  params[["nmigration"]]=nmigration
   
   if(b_verbose){
     cat("MAX_EVENTS=",MAX_EVENTS,"\n")
@@ -224,15 +224,11 @@ sim_pop=function(tree,
          trajectoryDivRate = as.double(trajectory_div_rate),
          trajectoryDeathRate = as.double(trajectory_death_rate),
          trajectoryCompartment = as.integer(trajectory_compartment),
-         #trajectoryCompartment2 =  as.integer(trajectory_compartment2),
-         #trajectorySDivTo2 = as.double(trajectory_s_div_rate2),
-         #trajectoryADivTo2 = as.double(trajectory_a_div_rate2),
          trajectorySize = as.integer(trajectory_size),
          c1=as.integer(c1),
          c2=as.integer(c2),
          arate=as.double(arate),
          srate=as.double(srate),
-         nmigration=as.integer(nmigration),
          driverSize=as.integer(length(driversFitness)),
          bVerbose=as.integer(b_verbose),
          edgesOut=integer(2*MAX_SIZE),

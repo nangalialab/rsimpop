@@ -34,6 +34,9 @@ private:
 	std::vector<int> mID;
 	vector<pair<shared_ptr<CellCompartment>,double>> symmetricDifferentiation;
 	vector<pair<shared_ptr<CellCompartment>,double>> asymmetricDifferentiation;
+	vector<pair<shared_ptr<CellCompartment>,double>> incomingSymmetricDifferentiation;
+	vector<pair<shared_ptr<CellCompartment>,double>> incomingAsymmetricDifferentiation;
+	
 
 public:
 	CellCompartment(int id,int targetPopSize,double divisionRate,double deathRate,std::vector<std::pair<double,int>> fitnessID);  //,
@@ -44,6 +47,8 @@ public:
 	double mDeathRate;
 	double mTotalDivRate=0.0;
 	double mTotalDeathRate=0.0;
+	double mTotalAsymmetricDivRate=0.0;
+	double mTotalSymmetricDivRate=0.0;
 	int mindexInFitnessDistro; 
 	double alpha=0.2;
 	std::vector<double> mFitness;
@@ -60,6 +65,9 @@ public:
 	int getSub(int ID);
 	void addSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
 	void addAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	void addIncomingSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	void addIncomingAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	
 
 	void doEvent(CellSimulation & sim);
 	void checkPop();

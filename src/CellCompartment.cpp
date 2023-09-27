@@ -173,19 +173,15 @@ double CellCompartment::getTotalDeathRate(){
   return tot;
 }
 
-
-
-
-
 double CellCompartment::getTotalRate(){
-	double tot=mTotalDivRate+mTotalDeathRate;
+	double tot=mTotalDivRate+mTotalDeathRate+mTotalAsymmetricDivRate+mTotalSymmetricDivRate;
 	if(tot<0.0){
 		printInfo();
 		throw "getTotalRate: UnexpectedNegative";
 
 	}
 //	if(atEquilibrium){
-		return mTotalDivRate+mTotalDeathRate;
+		return tot;//mTotalDivRate+mTotalDeathRate;
 	//}else{
 	  //Following means we have pure exponential growth until equilibrium
 		//return mTotalDivRate+mTotalDeathRate;
@@ -195,18 +191,42 @@ double CellCompartment::getTotalRate(){
 void CellCompartment::setRates(){
   double totalDeathRate=0.0;
   double tol=1e-6;
+  int sz=0;
+  int ii=0;
 	//We want 20% (alpha) of the deviation to go per day - so rate_delta needs to be rate_delta=0.05*pop_delta
 	//printf("In set rates\n");
-	if(!active){
-		mTotalDivRate=0.0;
-		mTotalDeathRate=0.0;
+	mTotalDivRate=0.0;
+	totalDeathRate=0.0;
+	mTotalAsymmetricDivRate=0;
+	mTotalSymmetricDivRate=0;
+	if(!active || mDivisionRate<0.0){
+	
+		// Do nothing
 	}else{
 
-		mTotalDivRate=getTotalDivisionRate();
-	  totalDeathRate=getTotalDeathRate();
+		//mTotalDivRate=getTotalDivisionRate();
+	  //totalDeathRate=getTotalDeathRate();
+	  
+	  //
+	  mTotalAsymmetricDivRate=0;
+	  for(int i=0;i<numNonEmptyCompartments;i++){
+	    ii=nonEmptyCompartmentIndices[i];
+	    sz=subCompartments[ii].size();
+	    mTotalDivRate+=mDivisionRate*(1+mFitness[ii])*sz;
+	    totalDeathRate=mDeathRate*sz;
+	    sz=subCompartments[ii].size();
+	    for(pair<shared_ptr<CellCompartment>,double> otherCompartment : asymmetricDifferentiation){
+	      mTotalAsymmetricDivRate+=sz*otherCompartment.second;
+	    }
+	    for(pair<shared_ptr<CellCompartment>,double> otherCompartment : symmetricDifferentiation){
+	      mTotalSymmetricDivRate+=sz*otherCompartment.second;
+	    }
+	  }
+	  //TODO Review this. e.g. actual contraction rate is also governed by flows coming in (not tracked here..)
 	  if(totalDeathRate>mTotalDivRate){
 	    throw "deathRate: Should be <= divrate!";
 	  }
+	  
 	  // if we are within 1% of the target population size or above the target then actively change death rate
 	  // to target the population size
 	  double targetTolerance=0.01;
@@ -215,9 +235,19 @@ void CellCompartment::setRates(){
 	    return;
 	  }
 	  if(atEquilibrium && totalpop>(1-targetTolerance)*mTargetPopSize){
-      // Actively target population if at
-	    double tmp=(mTotalDivRate-alpha*(mTargetPopSize-totalpop));
+	    double incoming=0;
+	    // Following only works if the feeding compartments only only feed this compartment..
+	    for(pair<shared_ptr<CellCompartment>,double> otherCompartment : incomingAsymmetricDifferentiation){
+	      incoming+=otherCompartment.first->mTotalAsymmetricDivRate;
+	    }
+	    for(pair<shared_ptr<CellCompartment>,double> otherCompartment : incomingSymmetricDifferentiation){
+	      incoming+=2*otherCompartment.first->mTotalSymmetricDivRate;
+	    }
+	    
+      // Actively target a population size
+	    double tmp=(mTotalDivRate+incoming-mTotalSymmetricDivRate-alpha*(mTargetPopSize-totalpop));
 	    mTotalDeathRate=tmp>0?tmp:0.0;
+	    //printf("id=%d incoming=%7.6f divrate=%7.6f sdivrate=%7.6f mTargetPopSize=%d totalpop=%d  deathrate=%7.6f\n",id,incoming,mTotalDivRate,mTotalSymmetricDivRate,mTargetPopSize,totalpop,mTotalDeathRate);
 	    return;
 	  }
 	  mTotalDeathRate=totalDeathRate;
@@ -311,4 +341,12 @@ void CellCompartment::addAsymmetricDifferentiationRate(shared_ptr<CellCompartmen
   asymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
 }
 
-
+void CellCompartment::addIncomingSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
+  printf("Adding incoming symmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  incomingSymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
+  
+}
+void CellCompartment::addIncomingAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
+  printf("Adding incoming aSymmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  incomingAsymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
+}

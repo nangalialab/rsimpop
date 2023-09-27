@@ -188,6 +188,7 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 			  popbycomp[i]=0.0;
 			}
 			rates[i]=compartment->getTotalRate();
+			//printf("total rates %d = %7.6f\n",i,rates[i]);
 			totrate+=rates[i++];
 			pop+=compartment->totalpop;
 			
@@ -533,77 +534,135 @@ pair<int,double> CellSimulation::getNextDriver(){
 }
 
 void CellCompartment::doEvent(CellSimulation & sim){
-	if(numNonEmptyCompartments==0){
-		throw "Attempting to doEvent on empty compartment!";
-	}
-  //if(atEquilibrium && rndGen->getUniform() < mTotalDeathRate/(mTotalDeathRate+mTotalDivRate)){
-  // remove atEquilibrium for a mo.
+  if(numNonEmptyCompartments==0){
+    throw "Attempting to doEvent on empty compartment!";
+  }
   
- /* int ct=round(sim.currentTime);
-  if( abs(sim.currentTime-ct)<0.001 && ct % 20 == 0){
-    printf("totals ts=%3.2f divr=%4.3f deathr=%4.3f dprob=%4.2f\n",sim.currentTime,mTotalDivRate,mTotalDeathRate,mTotalDeathRate/(mTotalDeathRate+mTotalDivRate));
-  }*/
-  
-  if(rndGen->getUniform() < mTotalDeathRate/(mTotalDeathRate+mTotalDivRate)){
-		// death/symmetric differentiation is the same across the board..
-		for(int i=0;i<numNonEmptyCompartments;i++){
-			prob[i]=subCompartments[nonEmptyCompartmentIndices[i]].size();
-		}
-		int ii=rndGen->sample(numNonEmptyCompartments,prob,false);
-		int i=nonEmptyCompartmentIndices[ii];
-		int sz=subCompartments[i].size();
-		int k=rndGen->sample(sz);
-		shared_ptr<PhyloNode> node=subCompartments[i][k];
-		sim.die(node);
-		//remove it from the compartment...
-		if(k==sz-1){
-			subCompartments[i].pop_back();
-		}else{
-			subCompartments[i][k]=subCompartments[i][sz-1];
-			subCompartments[i].pop_back();
-		}
-		totalpop--;
-		sim.recycle(node);
-
-	}else{
+  /* int ct=round(sim.currentTime);
+   if( abs(sim.currentTime-ct)<0.001 && ct % 20 == 0){
+   printf("totals ts=%3.2f divr=%4.3f deathr=%4.3f dprob=%4.2f\n",sim.currentTime,mTotalDivRate,mTotalDeathRate,mTotalDeathRate/(mTotalDeathRate+mTotalDivRate));
+   }*/
+  double totalRate=mTotalDeathRate+mTotalDivRate+mTotalAsymmetricDivRate+mTotalSymmetricDivRate;
+  //printf("totalrate=%7.6f..\n",totalRate);
+  double rnd=totalRate*rndGen->getUniform();
+  int ii=0;
+  if(rnd < mTotalDeathRate){
+    // death is the same for each subcomparment
+    for(int i=0;i<numNonEmptyCompartments;i++){
+      prob[i]=subCompartments[nonEmptyCompartmentIndices[i]].size();
+    }
+    int ii=rndGen->sample(numNonEmptyCompartments,prob,false);
+    int i=nonEmptyCompartmentIndices[ii];
+    int sz=subCompartments[i].size();
+    int k=rndGen->sample(sz);
+    shared_ptr<PhyloNode> node=subCompartments[i][k];
+    sim.die(node);
+    //remove it from the compartment...
+    if(k==sz-1){
+      subCompartments[i].pop_back();
+    }else{
+      subCompartments[i][k]=subCompartments[i][sz-1];
+      subCompartments[i].pop_back();
+    }
+    totalpop--;
+    sim.recycle(node);
+    
+  }else if(rnd<mTotalDeathRate+mTotalDivRate){
     //Divide
-		int ii=0;
-		for(int i=0;i<numNonEmptyCompartments;i++){
-			ii=nonEmptyCompartmentIndices[i];
-			prob[i]=(1+mFitness[ii])*subCompartments[ii].size();
-		}
-		ii=rndGen->sample(numNonEmptyCompartments,prob,false);
-		int i=nonEmptyCompartmentIndices[ii];
-
-		//now choose which sample to divide
-		int k=rndGen->sample(subCompartments[i].size());
-		shared_ptr<PhyloNode> parent=subCompartments[i][k];
-		auto children=sim.divide(parent);
-		subCompartments[i][k]=children.first;
-		
-		// [START]Simulate 2 way movement 
-		if(rndGen->getUniform()< 0.1 && sim.compartments.size()>3 && (this->id)==2){
-		  //int compid=this->id==2?3:2;
-		  int compid=3;
-		  sim.compartments[compid]->active=true;
-		  sim.compartments[compid]->addNode(children.second,0);
-		  //printf("Doing transition %d:%d\n",this->id,compid);
-		  Event event(-1,sim.currentTime,compid,0,0); 
-		  shared_ptr<Event> thisEvent=std::make_shared<Event>(event);
-		  children.second->addEvent(thisEvent);
-		  //subCompartments[i].push_back(children.second);
-		  sim.compartments[compid]->setNumNonEmptyIndices();
-		  sim.compartments[compid]->setRates();
-		}else{
-		  subCompartments[i].push_back(children.second);
-		  totalpop++;
-		}
-		//printf("totpop=%d..\n",totalpop);
-
-	}
-	if(!atEquilibrium && totalpop>=mTargetPopSize){
-			//printf("Compartment %d At Equilibrium\n",id);
-			atEquilibrium=true;
-	}
-	setRates();
+    for(int i=0;i<numNonEmptyCompartments;i++){
+      ii=nonEmptyCompartmentIndices[i];
+      prob[i]=(1+mFitness[ii])*subCompartments[ii].size();
+    }
+    ii=rndGen->sample(numNonEmptyCompartments,prob,false);
+    int i=nonEmptyCompartmentIndices[ii];
+    
+    //now choose which sample to divide
+    int k=rndGen->sample(subCompartments[i].size());
+    shared_ptr<PhyloNode> parent=subCompartments[i][k];
+    auto children=sim.divide(parent);
+    subCompartments[i][k]=children.first;
+    
+    // [START]Simulate 2 way movement 
+    /*		if(rndGen->getUniform()< 0.1 && sim.compartments.size()>3 && (this->id)==2){
+     //int compid=this->id==2?3:2;
+     int compid=3;
+     sim.compartments[compid]->active=true;
+     sim.compartments[compid]->addNode(children.second,0);
+     //printf("Doing transition %d:%d\n",this->id,compid);
+     Event event(-1,sim.currentTime,compid,0,0); 
+     shared_ptr<Event> thisEvent=std::make_shared<Event>(event);
+     children.second->addEvent(thisEvent);
+     //subCompartments[i].push_back(children.second);
+     sim.compartments[compid]->setNumNonEmptyIndices();
+     sim.compartments[compid]->setRates();
+    }else{
+     subCompartments[i].push_back(children.second);
+     totalpop++;
+    }
+     */
+    subCompartments[i].push_back(children.second);
+    totalpop++;
+    //printf("totpop=%d..\n",totalpop);
+    
+  }else{
+    //Divide
+    int ii=0;
+    for(int i=0;i<numNonEmptyCompartments;i++){
+      ii=nonEmptyCompartmentIndices[i];
+      prob[i]=subCompartments[ii].size();
+    }
+    ii=rndGen->sample(numNonEmptyCompartments,prob,false);
+    int i=nonEmptyCompartmentIndices[ii];
+    //now choose which sample to divide
+    int k=rndGen->sample(subCompartments[i].size());
+    shared_ptr<PhyloNode> parent=subCompartments[i][k];
+    auto children=sim.divide(parent);
+    if((rnd<mTotalDeathRate+mTotalDivRate+mTotalAsymmetricDivRate)){
+      subCompartments[i][k]=children.first;
+      if(asymmetricDifferentiation.size()==1){
+        int compid=asymmetricDifferentiation[0].first->id;
+        sim.compartments[compid]->active=true;
+        sim.compartments[compid]->addNode(children.second,0);
+        //printf("Doing transition %d:%d\n",this->id,compid);
+        Event event(-1,sim.currentTime,compid,0,0); 
+        shared_ptr<Event> thisEvent=std::make_shared<Event>(event);
+        children.second->addEvent(thisEvent);
+        sim.compartments[compid]->setNumNonEmptyIndices();
+        sim.compartments[compid]->setRates();
+      }else{
+        throw "need to implement support for differentiation to multiple comparments.";
+      }
+    }else{
+      if(symmetricDifferentiation.size()==1){
+        int sz=subCompartments[i].size();
+        //remove it from the compartment...
+        if(k==sz-1){
+          subCompartments[i].pop_back();
+        }else{
+          subCompartments[i][k]=subCompartments[i][sz-1];
+          subCompartments[i].pop_back();
+        }
+        int compid=symmetricDifferentiation[0].first->id;
+        sim.compartments[compid]->active=true;
+        // We're not really supporting differentiation to driver compartments.
+        sim.compartments[compid]->addNode(children.first,0);
+        sim.compartments[compid]->addNode(children.second,0);
+        //printf("Doing transition %d:%d\n",this->id,compid);
+        Event event(-1,sim.currentTime,compid,0,0);// TOD change ID 
+        shared_ptr<Event> thisEvent=std::make_shared<Event>(event);
+        children.first->addEvent(thisEvent);
+        children.second->addEvent(thisEvent);// Potential issue here!
+        sim.compartments[compid]->setNumNonEmptyIndices();
+        sim.compartments[compid]->setRates();
+        totalpop--;
+      }else{
+        throw "need to implement support for differentiation to multiple comparments.";
+      }
+    }
+  }
+  if(!atEquilibrium && totalpop>=mTargetPopSize){
+      //printf("Compartment %d At Equilibrium\n",id);
+    atEquilibrium=true;
+  }
+  setRates();
 }
