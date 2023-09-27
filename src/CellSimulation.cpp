@@ -107,7 +107,8 @@ CellSimulation::CellSimulation(int * edges,
 	
 	
 	//printf("bVerbose=%d\n",bVerbose);
-	//The following actually populates the CellCompartments by copying pointers to PhyloNodes that correspond to extant cells into their compartments and sub-compartments.
+	//The following actually populates the CellCompartments by copying pointers to PhyloNodes that 
+	//correspond to extant cells into their compartments and sub-compartments.
 	setCompartmentInfo();
 	
 	resetNtips(false);
@@ -144,8 +145,6 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 	int ncomp=compartments.size();
 	double rates[ncomp];
 	double popbycomp[ncomp];
-	//double tmp_currentTime = currentTime;
-	//double dt=currentTime;
 	///collect daily timestamps
 	double lastSnap=currentTime;
 	double lastYear=floor(currentTime/365.0);
@@ -158,7 +157,6 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 	int k;
 	//printf("stop if @ equi=%d\n" ,bStopAtEquilibrium );
 	int status=0;
-	//int nAddedDrivers=0;
 	//printf("init params:t=%3.2f:till=%3.2f:rate=%3.2f:poptarget=%d\n",currentTime,stopTime,compartments[1]->mDivisionRate,compartments[1]->mTargetPopSize);
 	while(currentTime<stopTime){  //stopTime is the number of simulation days
 		//kk++;
@@ -211,6 +209,10 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 		  //popbycomp[i]/=pop;
 		  //printf("p[%d]=%3.2f",i,popbycomp[i]);
 		}
+		//printf("\n");
+		//if(compartments.size()==4){
+		//  printf("compartment 3 is active? %d:  total rate =%3.2g  %3.2g\n",compartments[3]->active,compartments[3]->getTotalDivisionRate(),compartments[3]->getTotalRate());
+		//}
 		
 		if(driverRate>1e-10){
 		  if(rndGen->getUniform()<pop*driverRate/(totrate+pop*driverRate)){
@@ -271,6 +273,7 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 		}
 
 	}
+	printf("done!");
 	return status;
 
 }
@@ -440,19 +443,11 @@ void CellSimulation::setCompartmentInfo(){
  * Assigns nodes to compartments
  */
 void CellSimulation::setCompartmentInfoRecursively(shared_ptr<PhyloNode> thisNode,int compartment,int driverid,int * tip_idx,int ntip){
-	//TODO: Replace compartment and drivers by a state triplet compartment_id,sub_compartment_id,ndrivers  ## add
 	int val;
 	int nsub;
-	//int drivervals[]={0,1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576};
-	//The nodes are allocated to the correct sub-compartment based on a fixed binary expansion scheme [ugly but works]
-	//See cfg$info for
 	if(thisNode->events.size()>0){
 		for(const shared_ptr<Event> & event: thisNode->events){
 			val=event->value;
-			//if(event->driverid>20){
-			//	throw "CellSimulaton:setCompartmentInfoRecursively: Too many drivers!";
-			//}
-			//driverid+=drivervals[event->driverid];
 			if(event->driverid!=0){
 			  driverid=event->driverid;
 			}
@@ -585,9 +580,24 @@ void CellCompartment::doEvent(CellSimulation & sim){
 		shared_ptr<PhyloNode> parent=subCompartments[i][k];
 		auto children=sim.divide(parent);
 		subCompartments[i][k]=children.first;
-		subCompartments[i].push_back(children.second);
-
-		totalpop++;
+		
+		// [START]Simulate 2 way movement 
+		if(rndGen->getUniform()< 0.1 && sim.compartments.size()>3 && (this->id)==2){
+		  //int compid=this->id==2?3:2;
+		  int compid=3;
+		  sim.compartments[compid]->active=true;
+		  sim.compartments[compid]->addNode(children.second,0);
+		  //printf("Doing transition %d:%d\n",this->id,compid);
+		  Event event(-1,sim.currentTime,compid,0,0); 
+		  shared_ptr<Event> thisEvent=std::make_shared<Event>(event);
+		  children.second->addEvent(thisEvent);
+		  //subCompartments[i].push_back(children.second);
+		  sim.compartments[compid]->setNumNonEmptyIndices();
+		  sim.compartments[compid]->setRates();
+		}else{
+		  subCompartments[i].push_back(children.second);
+		  totalpop++;
+		}
 		//printf("totpop=%d..\n",totalpop);
 
 	}

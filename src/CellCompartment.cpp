@@ -29,13 +29,12 @@ CellCompartment::CellCompartment(int id,int targetPopSize,double divisionRate,do
   rndGen=RandomNumberGenerator::getInstance();
   //Get random number generator
   prob=new double[nsub];
+  printf("Cellcomparment : %d : divRate=%3.2f deathRate=%3.2f : targetpop=%d\n",id,mDivisionRate,mDeathRate,mTargetPopSize);
   if(mDivisionRate < -0.001){
     active=false;
   }else{
     active=true;
   }
-  
-  
 }
 
 CellCompartment::~CellCompartment() {
@@ -43,11 +42,6 @@ CellCompartment::~CellCompartment() {
 	//printf("destroying %d",id);
 
 }
-
-//double rrexp(double lambda){
-//  return exp_rand()/lambda;
-//}
-
 
 int CellCompartment::getSub(int ID){
 	return idxByID[ID];
@@ -255,12 +249,9 @@ double CellCompartment::addDriver(CellSimulation & sim,double ts){   //,double f
 		int k=rndGen->sample(sz);
 		shared_ptr<PhyloNode> node=subCompartments[i][k];  //random selection of a cell from the chosen subcompartment
 		//Node ID of event only matters when provided externally.
-		//int driverid=sim.incrementCurrentDriverID();
-		//Event event(-1,ts,id,(driverid+mindexInFitnessDistro),(driverid+mindexInFitnessDistro));   //Event event(-1,ts,id,driverid,driverid);
 		Event event(-1,ts,id,driverid,driverid); 
 		shared_ptr<Event> thisEvent=std::make_shared<Event>(event);
 		node->addEvent(thisEvent);
-		//double fitnessValue = getNextFitness((driverid+mindexInFitnessDistro));  //getNextFitness(driverid);  //(driverid+mindexInFitnessDistro)
 		if(fitnessValue>0){
 			double fitness = fitnessValue+mFitness[i];
 			mFitnessOut.push_back(fitness);
@@ -310,22 +301,14 @@ double CellCompartment::addDriver(CellSimulation & sim,double ts){   //,double f
 	
 }
 
-
-
-/**
-double CellCompartment::getNextFitness(int currentFitnessIndex){
-	return mfitnessDistribution[currentFitnessIndex];  
+void CellCompartment::addSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
+  printf("Adding symmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  symmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
+  
 }
-
-
-int CellCompartment::getFitnessIndex(){
-	return mindexInFitnessDistro;
+void CellCompartment::addAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
+  printf("Adding aSymmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  asymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
 }
-
-int CellCompartment::getNumAddedDrivers(){
-	return numOfAddedDrivers;
-}
-**/
-
 
 

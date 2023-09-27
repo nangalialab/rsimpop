@@ -32,9 +32,8 @@ private:
 	int numOfAddedDrivers=0;
 	std::vector<double> mFitnessOut;
 	std::vector<int> mID;
-	
-
-
+	vector<pair<shared_ptr<CellCompartment>,double>> symmetricDifferentiation;
+	vector<pair<shared_ptr<CellCompartment>,double>> asymmetricDifferentiation;
 
 public:
 	CellCompartment(int id,int targetPopSize,double divisionRate,double deathRate,std::vector<std::pair<double,int>> fitnessID);  //,
@@ -59,7 +58,8 @@ public:
 	void setRates();
 	void setNumNonEmptyIndices();
 	int getSub(int ID);
-	
+	void addSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	void addAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
 
 	void doEvent(CellSimulation & sim);
 	void checkPop();

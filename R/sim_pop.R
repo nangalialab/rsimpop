@@ -45,8 +45,7 @@ initSimPop=function(seed,bForce=FALSE){
 #' growthphase=sim_pop(NULL,params=params,cfg)
 sim_pop=function(tree,
                  params=list(),
-                 cfg=list(compartment=data.frame(val=c(0,1),rate=c(-1,1/120.0),death_rate=c(0,0),popsize=c(1,1e4)),
-                          info=data.frame(val=c(0,1,1),fitness=c(-1,0,0.2))),
+                 cfg=getDefaultConfig(5e4,0.01),#list(compartment=data.frame(val=c(0,1),rate=c(-1,1/120.0),death_rate=c(0,0),popsize=c(1,1e4)),#    info=data.frame(val=c(0,1,1),fitness=c(-1,0,0.2))),
                  b_verbose=1, 
                  b_check=FALSE,
                  trajectory=NULL,  #tarjectory
@@ -143,12 +142,19 @@ sim_pop=function(tree,
   #browser()
   # set the trajectory columns to 0 if user is not running run_driver_process_sim()
   if(is.null(trajectory)){
-    trajectory_ts = 0; trajectory_pop = 0
-    trajectory_div_rate = 0; trajectory_size=0; trajectory_compartment=1;trajectory_death_rate=0
+    trajectory_ts = 0
+    trajectory_pop = 0
+    trajectory_div_rate = 0
+    trajectory_size=0
+    trajectory_compartment=1
+    trajectory_death_rate=0
+    trajectory_compartment2=1
+    trajectory_s_div_rate2=0
+    trajectory_a_div_rate2=0
     totalpop=max(sum(compartment$popsize),length(tree$tip.label))
-    MAX_SIZE=3*totalpop ##Allows for stochastic drift in population size (need to make this robust)
-    MAX_EVENTS=ceiling(2*params[["n_sim_days"]])
-  }else if(is.data.frame(trajectory) | is.data.table(trajectory)){
+    MAX_SIZE=3*totalpop +10000 ##Allows for stochastic drift in population size (need to make this robust)
+    MAX_EVENTS=ceiling(100*params[["n_sim_days"]])
+  }else if(is.data.frame(trajectory) || is.data.table(trajectory)){
     trajectory$target_pop_size=ceiling(trajectory$target_pop_size)
     trajectory_ts = trajectory$ts
     trajectory_pop = trajectory$target_pop_size  
@@ -156,15 +162,31 @@ sim_pop=function(tree,
     trajectory_death_rate = trajectory$death_rate
     trajectory_size = nrow(trajectory)
     trajectory_compartment = trajectory$compartment
-    
+    trajectory_compartment2=trajectory$compartment
+    trajectory_s_div_rate2=rep(0,length(trajectory$compartment))
+    trajectory_a_div_rate2=rep(0,length(trajectory$compartment))
     trj=trajectory %>% group_by(compartment) %>% summarise(maxpop=max(target_pop_size))
     totalpop=sum(trj$maxpop) #max(trajectory_pop)   #max(sum(compartment$popsize),length(tree$tip.label))
     ##Include other compartments
     totalpop=totalpop+sum(compartment$popsize[which(!(compartment$val %in% trajectory$compartment))])
     totalpop=max(totalpop,length(tree$tip.label))
-    MAX_SIZE=ceiling(3*totalpop)+100 ##Allows for stochastic drift in population size (need to make this robust)
-    MAX_EVENTS=ceiling(2*max(trajectory_ts))
+    MAX_SIZE=ceiling(3*totalpop)+10000 ##Allows for stochastic drift in population size (need to make this robust)
+    MAX_EVENTS=ceiling(10*max(trajectory_ts))
   }
+  if(is.null(cfg$migrations) || nrow(cfg$migrations)==0){
+    nmigration=0
+    c1=0
+    c2=0
+    arate=0
+    srate=0
+  }else{
+    c1=cfg$migrations$c1
+    c2=cfg$migrations$c2
+    arate=cfg$migrations$arate
+    srate=cfg$migrations$srate
+    nmigration=nrow(cfg$migrations)
+  }
+  ##params[["nmigration"]]=nmigration
   
   if(b_verbose){
     cat("MAX_EVENTS=",MAX_EVENTS,"\n")
@@ -192,7 +214,7 @@ sim_pop=function(tree,
          compinfodriverstatus=as.integer(compartmentinfo$id),
          ncomp=as.integer(length(compartmentinfo$val)),
          params=as.double(params),
-         nparams=as.integer(length(params)),
+         #nparams=as.integer(length(params)),
          fitnessDistro = as.double(driversFitness),## ADD IN MAX_FITNESS_SIZE
          nMaxPreviousDriverID = as.integer(max_initial_driverid),
          max_size=as.integer(MAX_SIZE),
@@ -202,7 +224,15 @@ sim_pop=function(tree,
          trajectoryDivRate = as.double(trajectory_div_rate),
          trajectoryDeathRate = as.double(trajectory_death_rate),
          trajectoryCompartment = as.integer(trajectory_compartment),
+         #trajectoryCompartment2 =  as.integer(trajectory_compartment2),
+         #trajectorySDivTo2 = as.double(trajectory_s_div_rate2),
+         #trajectoryADivTo2 = as.double(trajectory_a_div_rate2),
          trajectorySize = as.integer(trajectory_size),
+         c1=as.integer(c1),
+         c2=as.integer(c2),
+         arate=as.double(arate),
+         srate=as.double(srate),
+         nmigration=as.integer(nmigration),
          driverSize=as.integer(length(driversFitness)),
          bVerbose=as.integer(b_verbose),
          edgesOut=integer(2*MAX_SIZE),
@@ -663,9 +693,9 @@ combine_simpops=function(simpop1,simpop2){
 #' @param basefit float - base fitness redundant now.
 #' @return list config
 #' @export
-getDefaultConfig=function(target_pop_size,rate,
+getDefaultConfig=function(target_pop_size,rate,death_rate=0,
                           descr="cellType1",ndriver=1,
-                          basefit=0.1)
+                          basefit=0,migrations=data.frame(c1=integer(),c2=integer(),arate=numeric(),srate=numeric()))
 {
   if(!is.numeric(rate) | length(rate)>1)
     stop("per day division rate should be a numeric value.")
@@ -677,6 +707,7 @@ getDefaultConfig=function(target_pop_size,rate,
     stop("the target population size should be a scalars")
   compartment=data.frame(val=0,
                          rate=-1,
+                         death_rate=0,
                          popsize=1,
                          desc="outgroup")
   info=data.frame(val=0,population=0,fitness=0,id=0,driver1=0)
@@ -685,7 +716,10 @@ getDefaultConfig=function(target_pop_size,rate,
     stop("please provide scalars")
   }
   #addCellCompartment(cfg,target_pop_size,rate,ndriver,basefit,descr)
-  addCellCompartment(cfg,target_pop_size,rate,descr=descr)
+  cfg=addCellCompartment(cfg,target_pop_size,rate,descr=descr,death_rate=death_rate)
+  ## check migrations... 
+  cfg$migrations=migrations
+  cfg
 }
 
 #' Adds a new cell compartment to a simpop configuration
@@ -696,7 +730,7 @@ getDefaultConfig=function(target_pop_size,rate,
 #' @param descr character. Description
 #' @return list simpop config
 #' @export
-addCellCompartment=function(cfg,population,rate,ndriver=0,basefit=0,descr=NULL){
+addCellCompartment=function(cfg,population,rate,ndriver=0,basefit=0,descr=NULL,death_rate=0){
   val=max(cfg$compartment$val)+1
   if(is.null(descr)){
     descr=sprintf("cellType%d",val)
@@ -708,7 +742,7 @@ addCellCompartment=function(cfg,population,rate,ndriver=0,basefit=0,descr=NULL){
   row$id=0
   
   cfg$info=rbind(cfg$info,row)
-  cfg$compartment=rbind(cfg$compartment,data.frame(val=val,rate=rate,popsize=population,desc=descr))
+  cfg$compartment=rbind(cfg$compartment,data.frame(val=val,rate=rate,popsize=population,desc=descr,death_rate=death_rate))
   ## TODO change this so adding empty works - changing this doesn't currently play nice with addDriverEvent
   cfg$drivers=rbind(cfg$drivers,data.frame(val=val,driver=1,fitness=0))#data.frame(val=integer(0),driver=integer(0),fitness=numeric(0)))#
   cfg
