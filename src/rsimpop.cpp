@@ -14,7 +14,7 @@
 #include "CellCompartment.h"
 #include "PhyloNode.h"
 #include "Event.h"
-#include "TrajectoryTimePoint.h"
+//#include "TrajectoryTimePoint.h"
 extern "C" {
 /**
  * Functions called by R.
