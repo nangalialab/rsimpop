@@ -328,7 +328,11 @@ sim_pop=function(tree,
   res$is_combined=TRUE
   res
 }
-
+#' Plot simpop compartment level population trajectory
+#' @param simpop integer - a negative number uses current time to 100th second resoultion.
+#'
+#' @return ggplot
+#' @export
 plot_compartment_trajectory=function(simpop){
   df=spy$trajectory %>% pivot_longer(cols=names(spy$trajectory)[grep("^c",names(spy$trajectory))],names_to = "compartment",values_to = "pop")
   df=df %>% filter(compartment != "c0") %>% 

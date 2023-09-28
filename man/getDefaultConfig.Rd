@@ -7,9 +7,12 @@
 getDefaultConfig(
   target_pop_size,
   rate,
+  death_rate = 0,
   descr = "cellType1",
   ndriver = 1,
-  basefit = 0.1
+  basefit = 0,
+  migrations = data.frame(c1 = integer(), c2 = integer(), arate = numeric(), srate =
+    numeric())
 )
 }
 \arguments{
