@@ -93,7 +93,8 @@ sim_pop=function(tree,
                      b_stop_at_pop_size=0,
                      maxt=tree$maxt,
                      driver_rate_per_cell_per_day=0,
-                     max_driver_count=-1
+                     max_driver_count=-1,
+                     nmigration=0
   )
   fields=names(defaultparams)
   if(length(setdiff(names(params),names(defaultparams)))>0){
@@ -298,6 +299,9 @@ sim_pop=function(tree,
            ntips=res$ntipsOut,
            timestamp=res$eventTimestampOut[1:res$nEventsCount],
            pop.size=res$nPopSizeOut[1:res$nEventsCount],
+           pop.size.compartment=do.call("rbind",lapply(1:length(cfg$compartment$val),
+                                                       function(comp) data.frame(ts=res$eventTimestampOut[1:res$nEventsCount],val=comp-1,
+                                                                                 pop.size=res$nPopSizeOut[res$nEventsCount*comp+(1:res$nEventsCount)]))),
            totaldrivercount=res$nDriverOut[1:res$nEventsCount],
            ncellswithdrivers=1,
            params=params,
@@ -309,7 +313,9 @@ sim_pop=function(tree,
            driversPop = res$nAddedCompPops[1:res$nMaxDriverIDOut],
            maxDriverID = res$nMaxDriverIDOut
   )
-  
+  res$trajectory=res$pop.size.compartment %>% 
+    mutate(val=sprintf("c%d",val)) %>% pivot_wider(names_from=val,values_from = pop.size) %>% 
+    (function(x){for(col in names(x)[grep("^c",names(x))]){x[[col]]=ifelse(is.na(x[[col]]),0,x[[col]])};x})
   class(res)="simpop"
   res=get_tree_from_simpop(res,b_check)
   res$is_combined=FALSE
@@ -323,6 +329,12 @@ sim_pop=function(tree,
   res
 }
 
+plot_compartment_trajectory=function(simpop){
+  df=spy$trajectory %>% pivot_longer(cols=names(spy$trajectory)[grep("^c",names(spy$trajectory))],names_to = "compartment",values_to = "pop")
+  df=df %>% filter(compartment != "c0") %>% 
+    left_join(simpop$cfg$compartment %>% mutate(compartment=sprintf("c%s",val))) %>% dplyr::select(ts,pop,desc)
+  ggplot(df,aes(x=ts,y=pop,col=desc))+geom_line()+theme_bw()+xlab("Timestamp")+ylab("Population")
+}
 
 get_max_popsize_from_trajectory=function(tree,trajectory){
   trajectory_ts = trajectory$ts; 
@@ -546,6 +558,8 @@ C_subsample_pop=function(tree,tips,trajectory=NULL){
            maxDriverID=tree$maxDriverID,
            status=res$status
   )
+  
+  res
 }
 
 
@@ -670,7 +684,11 @@ combine_simpops=function(simpop1,simpop2){
     ##cat("combine_simpops:Remember to add compartment level granularity")
     simpop2$timestamp=c(simpop1$timestamp,simpop2$timestamp)
     simpop2$pop.size=c(simpop1$pop.size,simpop2$pop.size)
+    simpop2$pop.size.compartment=rbind(simpop1$pop.size.compartment,simpop2$pop.size.compartment)
     simpop2$totaldrivercount=c(simpop1$totaldrivercount,simpop2$totaldrivercount)
+    simpop2$trajectory=simpop2$pop.size.compartment %>% 
+      mutate(val=sprintf("c%d",val)) %>% pivot_wider(names_from=val,values_from = pop.size) %>% 
+      (function(x){for(col in names(x)[grep("^c",names(x))]){x[[col]]=ifelse(is.na(x[[col]]),0,x[[col]])};x})
     simpop2
   }else{
     warning("Deprecated use of combine_simpops")

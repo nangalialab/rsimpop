@@ -8,11 +8,13 @@
 #include "CellSimulation.h"
 #include "PhyloNode.h"
 #include "Event.h"
+#include "PopulationTimePoint.h"
 #include <string>
 #include <vector>
 #include <memory>
 #include <set>
 #include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -234,7 +236,7 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 			snap();
 			lastSnap=currentTime;
 			if(maxDriverCount>0){
-			  ndrivers=std::get<2>(populationTrace.back());
+			  ndrivers=populationTrace.back().getTotalDriverCount();// std::get<2>(populationTrace.back());
 			  if(ndrivers>=maxDriverCount){
 			    return status;
 			  }
@@ -245,7 +247,8 @@ int CellSimulation::run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpt
 			if(bVerbose){
 			printf("PROGRESS: T=%d year.  population=%d",int(currentTime/365.0),ntips);
 			if (!populationTrace.empty()){
-				printf(":drivers=%d\n",std::get<2>(populationTrace.back()));
+			//	printf(":drivers=%d\n",std::get<2>(populationTrace.back()));
+			  printf(":drivers=%d\n",populationTrace.back().getTotalDriverCount());// report the main compartment fornow
 			}else{
 				printf("\n");
 			}
@@ -307,11 +310,13 @@ void CellSimulation::deleteTips(std::set<int> tipsToDelete){
 
 void CellSimulation::snap(){
 	resetNtips();
-	populationTrace.push_back(tuple<double,int,int>(currentTime,ntips,ndrivers));
+	//populationTrace.push_back(tuple<double,int,int>(currentTime,ntips,ndrivers));
+	populationTrace.push_back(PopulationTimePoint( currentTime,compartmentIDs,populationCounts,driverCounts));
+	
 }
 
 
-vector<tuple<double,int,int>> CellSimulation::getPopulationTrace(){
+vector<PopulationTimePoint> CellSimulation::getPopulationTrace(){
 	return populationTrace;
 }
 //void CellSimulation::assignCellCompartments();
@@ -319,17 +324,30 @@ vector<tuple<double,int,int>> CellSimulation::getPopulationTrace(){
 void CellSimulation::resetNtips(bool bCheckMatch){
 	int totalpop=0;
 	int ndr=0;
+	driverCounts.resize(compartments.size(),0);
+	compartmentIDs.resize(compartments.size(),0);
+	populationCounts.resize(compartments.size(),0);
+	int j=0;
+	int cndr=0;
+	//printf("in resettips\n");
 	for(const shared_ptr<CellCompartment> & compartment : compartments){
 				vector<pair<bool,int>> subc=compartment->getSubCounts();
 				int n=subc.size();
+				cndr=0;
 				for(int i=1;i<n;i++){
 					if(subc[i].first){
-						ndr+=subc[i].second;
+					  cndr+=subc[i].second;
 					}
 				}
+				ndr+=cndr;
+				compartmentIDs[j]=compartment->id;
+				populationCounts[j]=compartment->totalpop;
+				driverCounts[j]=cndr;
 				totalpop+=compartment->totalpop;
 				compartment->checkPop();
+				j++;
 	}
+	//printf("done resettips\n");
 	if(bCheckMatch && totalpop!=ntips){
 		printf("Mismatch in tip count %d != %d!\n",totalpop,ntips);
 		throw "CellSimulation: Inconsistency - mismatch between sum of compartment pops and CellSimulation pop";

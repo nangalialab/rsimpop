@@ -112,9 +112,21 @@ void setMigrations(vector<shared_ptr<CellCompartment>> & cellCompartments,
                   double * srate,
                   int nmigration){
   // Add migration config to compartments
-  double totArate[100] ={};
-  double totSrate[100] ={};
-  map<int,double> totalSrate;
+  if(nmigration==0){
+    return;
+  }
+  int cmax=0;
+  for(int i=0;i<nmigration;i++){
+    cmax=c1[i]>cmax?c1[i]:cmax;
+    cmax=c2[i]>cmax?c2[i]:cmax;
+  }
+  double totArate[cmax+1];
+  double totSrate[cmax+1];
+  for(int i=0;i<cmax+1;i++){
+    totArate[i]=0.0;
+    totSrate[i]=0.0;
+  }
+ // map<int,double> totalSrate;
   double tol=1e-8;
   for(int i=0;i<nmigration;i++){
     cellCompartments[c1[i]]->addSymmetricDifferentiationRate(cellCompartments[c2[i]],srate[i]);
@@ -122,6 +134,7 @@ void setMigrations(vector<shared_ptr<CellCompartment>> & cellCompartments,
     totArate[c1[i]]+=arate[i];
     totSrate[c1[i]]+=srate[i];
   }
+  // The following specifies the proportion of differentiation events from other compartments that feed into each compartment.
   for(int i=0;i<nmigration;i++){
     double s=totSrate[c1[i]]>tol?totSrate[c1[i]]:1.0;
     double a=totArate[c1[i]]>tol?totArate[c1[i]]:1.0;
@@ -290,15 +303,26 @@ void sim_pop2(
 		populateEvents(eventsOut,neventOut,eventvalOut,eventdriveridOut,eventtsOut,eventuidOut,eventnodeOut);
 		populateCompartmentInfo(sim, nCompIDOut,nCompPopsOut, nSubCompIDOut, nCompFitnessOut, nformedPops);
 		
-		auto popTrace=sim.getPopulationTrace();
+		vector<PopulationTimePoint> popTrace=sim.getPopulationTrace();
 
 		int k=0;
-		for(tuple<double,int,int> timepoint : popTrace){
-			timestampOut[k]=std::get<0>(timepoint);//.first;
-			nPopSizeOut[k]=std::get<1>(timepoint);//timepoint.second;
-			nDriverOut[k++]=std::get<2>(timepoint);//
-		}
 		*nEventsCount=popTrace.size();
+		int nn=*nEventsCount;
+		int j=0;
+		for(PopulationTimePoint timepoint : popTrace){
+		  //printf("%7.6f\n",timepoint.timeStamp);
+			timestampOut[k]=timepoint.timeStamp;//std::get<0>(timepoint);//.first;
+			nPopSizeOut[k]=timepoint.getTotalPopulation();//std::get<1>(timepoint);//timepoint.second;
+			nDriverOut[k]=timepoint.getTotalDriverCount();//std::get<2>(timepoint);//
+			for(j=0;j<cellCompartments.size();j++){
+			  nPopSizeOut[k+(j+1)*nn]=timepoint.getPopulation(cellCompartments[j]->id);//std::get<1>(timepoint);//timepoint.second;
+			  nDriverOut[k+(j+1)*nn]=timepoint.getDriverCount(cellCompartments[j]->id);//std::get<2>(timepoint);//
+			  
+			}
+			k++;
+		}
+		
+		
 		//printf("status=%d\n",*status);
 		//*status=0;
 
