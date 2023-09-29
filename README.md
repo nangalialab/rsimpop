@@ -139,7 +139,7 @@ get_elapsed_time_tree
 #>     }
 #>     tree
 #> }
-#> <bytecode: 0x106bf5908>
+#> <bytecode: 0x1045259d0>
 #> <environment: namespace:rsimpop>
 sampledtree1m=get_elapsed_time_tree(sampledtree1,mutrateperdivision=1,backgroundrate=15/365)
 ```
@@ -262,7 +262,7 @@ run_neutral_sim
 #>     adult1 = sim_pop(growthphase, params = params, cfg)
 #>     return(adult1)
 #> }
-#> <bytecode: 0x16f8c5200>
+#> <bytecode: 0x131e53318>
 #> <environment: namespace:rsimpop>
 testing=run_neutral_sim(0.1,0.5/365,target_pop_size = 1e3,nyears=10)
 #> n_sim_days: 3650

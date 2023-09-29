@@ -342,11 +342,11 @@ void CellCompartment::addAsymmetricDifferentiationRate(shared_ptr<CellCompartmen
 }
 
 void CellCompartment::addIncomingSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
-  printf("Adding incoming symmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  printf("Adding incoming symmetricDifferentiation %d -> %d : probability this compartment = %3.2f\n",otherCompartment->id,this->id,rate);
   incomingSymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
   
 }
 void CellCompartment::addIncomingAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
-  printf("Adding incoming aSymmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  printf("Adding incoming aSymmetricDifferentiation %d -> %d : probability this compartment = %3.2f\n",otherCompartment->id,this->id,rate);
   incomingAsymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
 }

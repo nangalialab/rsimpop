@@ -268,7 +268,7 @@ plot_tree_events(dpst,cex.label = 0)
 
 ## Modelling continuous differentiation/migration between cellular compartments
 
-```{r, dev.args=list(pointsize=8),fig.height=8,fig.width=10}
+```{r, dev.args=list(pointsize=8),fig.height=6,fig.width=10}
 cfg=getDefaultConfig(target_pop_size  = 1e4,rate = 0.1)
 print(cfg)
 cfg$compartment$desc[2]="EMB"
