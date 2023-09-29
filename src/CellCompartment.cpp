@@ -332,12 +332,12 @@ double CellCompartment::addDriver(CellSimulation & sim,double ts){   //,double f
 }
 
 void CellCompartment::addSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
-  printf("Adding symmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  printf("Adding symmetricDifferentiation %d -> %d : rate = %5.4f\n",this->id,otherCompartment->id,rate);
   symmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
   
 }
 void CellCompartment::addAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate){
-  printf("Adding aSymmetricDifferentiation %d -> %d : rate = %3.2f\n",this->id,otherCompartment->id,rate);
+  printf("Adding aSymmetricDifferentiation %d -> %d : rate = %5.4f\n",this->id,otherCompartment->id,rate);
   asymmetricDifferentiation.push_back(pair<shared_ptr<CellCompartment>,double>(otherCompartment,rate));
 }
 
