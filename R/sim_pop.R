@@ -316,7 +316,6 @@ sim_pop=function(tree,
            driversPop = res$nAddedCompPops[1:res$nMaxDriverIDOut],
            maxDriverID = res$nMaxDriverIDOut
   )
-  saveRDS(res,"../DEBUG.RDS")
   res$trajectory=res$pop.size.compartment %>% 
     mutate(val=sprintf("c%d",val)) %>% pivot_wider(names_from=val,values_from = pop.size) %>% 
     (function(x){for(col in names(x)[grep("^c",names(x))]){x[[col]]=ifelse(is.na(x[[col]]),0,x[[col]])};x})
