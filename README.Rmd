@@ -265,3 +265,34 @@ dpst=get_subsampled_tree(dps,200)
 dpst=get_elapsed_time_tree(dpst)
 plot_tree_events(dpst,cex.label = 0)
 ```
+
+## Modelling continuous differentiation/migration between cellular compartments
+
+```{r, dev.args=list(pointsize=8),fig.height=8,fig.width=10}
+cfg=getDefaultConfig(target_pop_size  = 1e4,rate = 0.1)
+print(cfg)
+cfg$compartment$desc[2]="EMB"
+##Simulate rapid growth before HSC specification
+sp=sim_pop(NULL,params=list(n_sim_days=365*1,b_stop_at_pop_size=1),cfg=cfg)
+##We say the HSC pool is started with 50 cells
+HSC_INIT_POP=50
+sp=get_subsampled_tree(sp,HSC_INIT_POP)
+cfg=sp$cfg
+cfg=addCellCompartment(cfg,population = 5e4,rate=0.02,descr="HSC")
+cfg=addCellCompartment(cfg,population = 5e5,rate=0.04,descr="MPP")
+cfg$compartment$rate[2]=c(-1)  ## change the rate of compartment 1
+cfg$compartment$popsize[2]=c(0) ## switch off EMB compartment
+sp=addDifferentiationEvents(sp,cfg,2,nEvent=HSC_INIT_POP,currentCompartment = 1)
+## Specify the HSC->MPP migrations (just symmetric at a low rate)
+sp$cfg$migrations=data.frame(c1=c(2),## source: HSC
+                             c2=c(3),## sink: MPP
+                             arate=c(0), ## asymmetric diff rate
+                             srate=c(0.001) ## symmetric diff rate
+                             )
+sp=sim_pop(sp,params=list(n_sim_days=2*365),cfg=sp$cfg)
+plot_compartment_trajectory(sp)
+plot_compartment_trajectory(sp)+scale_y_log10()
+st=get_subsampled_tree_fixed_compartmentcount(sp,compartments = c(2,3),counts=c(150,150))
+plot_tree_events(get_elapsed_time_tree(st,0,50/365),cex.label=0,use.desc=TRUE)
+```
+

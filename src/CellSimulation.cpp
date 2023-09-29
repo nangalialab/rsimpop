@@ -309,10 +309,16 @@ void CellSimulation::deleteTips(std::set<int> tipsToDelete){
 }
 
 void CellSimulation::snap(){
+  double tol=1e-8;
 	resetNtips();
-	//populationTrace.push_back(tuple<double,int,int>(currentTime,ntips,ndrivers));
-	populationTrace.push_back(PopulationTimePoint( currentTime,compartmentIDs,populationCounts,driverCounts));
-	
+  if(!populationTrace.empty()){
+    if(currentTime>(populationTrace.back().timeStamp+tol)){
+	  //populationTrace.push_back(tuple<double,int,int>(currentTime,ntips,ndrivers));
+	    populationTrace.push_back(PopulationTimePoint( currentTime,compartmentIDs,populationCounts,driverCounts));
+    }
+  }else{
+    populationTrace.push_back(PopulationTimePoint( currentTime,compartmentIDs,populationCounts,driverCounts));
+  }
 }
 
 

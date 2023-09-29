@@ -188,6 +188,9 @@ sim_pop=function(tree,
     nmigration=nrow(cfg$migrations)
   }
   params[["nmigration"]]=nmigration
+  if(any(is.na(match(c(c1,c2),compartment$val)))){
+    stop("Can only specify migration for existing compartments")
+  }
   
   if(b_verbose){
     cat("MAX_EVENTS=",MAX_EVENTS,"\n")
@@ -313,6 +316,7 @@ sim_pop=function(tree,
            driversPop = res$nAddedCompPops[1:res$nMaxDriverIDOut],
            maxDriverID = res$nMaxDriverIDOut
   )
+  saveRDS(res,"../DEBUG.RDS")
   res$trajectory=res$pop.size.compartment %>% 
     mutate(val=sprintf("c%d",val)) %>% pivot_wider(names_from=val,values_from = pop.size) %>% 
     (function(x){for(col in names(x)[grep("^c",names(x))]){x[[col]]=ifelse(is.na(x[[col]]),0,x[[col]])};x})
@@ -334,7 +338,7 @@ sim_pop=function(tree,
 #' @return ggplot
 #' @export
 plot_compartment_trajectory=function(simpop){
-  df=spy$trajectory %>% pivot_longer(cols=names(spy$trajectory)[grep("^c",names(spy$trajectory))],names_to = "compartment",values_to = "pop")
+  df=simpop$trajectory %>% pivot_longer(cols=names(simpop$trajectory)[grep("^c",names(simpop$trajectory))],names_to = "compartment",values_to = "pop")
   df=df %>% filter(compartment != "c0") %>% 
     left_join(simpop$cfg$compartment %>% mutate(compartment=sprintf("c%s",val))) %>% dplyr::select(ts,pop,desc)
   ggplot(df,aes(x=ts,y=pop,col=desc))+geom_line()+theme_bw()+xlab("Timestamp")+ylab("Population")
@@ -553,6 +557,7 @@ C_subsample_pop=function(tree,tips,trajectory=NULL){
            ntips=res$ntipsOut,
            timestamp=tree$timestamp,
            pop.size=tree$pop.size,
+           pop.size.compartment=tree$pop.size.compartment,
            totaldrivercount=tree$totaldrivercount,
            ncellswithdrivers=1,
            params=tree$params,
@@ -923,5 +928,21 @@ recalculateFitnessV2=function(cfg,cellType){
   }
   cfg
 }
-
-
+#' Gets subsampled tree - retaining events information appropriately
+#' @param tree simpop
+#' @param compartments integer. compartment ids (see val in tree$cfg)
+#' @param counts  integer. number of cells to sample from corresponding compartment.
+#' @return simpop
+#' @export
+#' @examples
+get_subsampled_tree_fixed_compartmentcount=function(tree,compartments,counts){
+ tipidx=which(tree$state==0 & tree$edge[,2]<=length(tree$tip.label))
+ for(i in 1:length(compartments)){
+   idx=which(tree$state==compartments[i] & tree$edge[,2]<=length(tree$tip.label))
+   if(length(idx)<counts[i]){
+     stop(sprintf("Attempt to sample more tips than available in compartment %d",compartments[i]))
+   }
+   tipidx=c(tipidx,sample(idx,counts[i]))
+ }
+ get_subsampled_tree(tree,-1,tree$edge[tipidx,2])
+}
