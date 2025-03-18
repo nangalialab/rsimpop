@@ -7,8 +7,7 @@
 sim_pop(
   tree,
   params = list(),
-  cfg = list(compartment = data.frame(val = c(0, 1), rate = c(-1, 1/120), popsize =
-    c(1, 10000)), info = data.frame(val = c(0, 1, 1), fitness = c(-1, 0, 0.2))),
+  cfg = getDefaultConfig(50000, 0.01),
   b_verbose = 1,
   b_check = FALSE,
   trajectory = NULL,

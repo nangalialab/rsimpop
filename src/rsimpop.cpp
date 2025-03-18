@@ -14,9 +14,50 @@
 #include "CellCompartment.h"
 #include "PhyloNode.h"
 #include "Event.h"
+//#include "TrajectoryTimePoint.h"
 extern "C" {
 /**
  * Functions called by R.
+ */
+
+/*
+void createTrajectoryStack(std::stack<TrajectoryTimePoint> & trajectoryStack,
+                                double * trajectoryTs,  //trajectoryYear
+                                int * trajectoryPop,
+                                double* * trajectoryDivRate,
+                                double * trajectoryDeathRate,
+                                int * trajectoryCompartment,
+                                int * trajectoryCompartment2,
+                                double * trajectorySDivTo2,
+                                double * trajectoryADivTo2,
+                                int * trajectorySize
+                                ){
+  double pts=-1.0f;
+  double tol=1e-6;
+  TrajectoryTimePoint * currentTrajectory;
+  for(int i=0;i<*trajectorySize;i++){
+    if(trajectoryTs[i]<pts-tol){
+      throw "Trajectory time stamps should be in order..";
+    }
+    if(trajectoryTs[i]>pts+tol){
+      pts=trajectoryTs[i];
+      currentTrajectory=new TrajectoryTimePoint(pts,
+                                            vector<int> compartment,
+                                            vector<int> pop,
+                                            vector<double> divRate,
+                                            vector<double> deathRate,
+                                            vector<int> compartment2,
+                                            vector<double> sDivRate2,
+                                            vector<double> aDivRate2
+                                              );    
+    }
+    currentTrajectory->compartment.push_back(compartment[i]);
+    
+  }
+  
+  
+  
+}
  */
 
 /**
@@ -27,12 +68,15 @@ extern "C" {
 void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cellCompartments,
 		int * eventnode,double * eventts,int * eventval,int * eventdriverid,int * eventuid,
 		int * nevents,int * compinfoval,double * compinfofitness,
-		int * ncomp,int* compartmentsize,double * compartmentrate,
-		int * compartmentval,int * ncompartment,int * driverid, double * fitnessDistribution, int * ndriverevents,int * driverFitnessSize){   //
+		int * ncomp,int* compartmentsize,double * compartmentrate,double * compartmentdeathrate,
+		int * compartmentval,int * ncompartment,int * driverid, double * fitnessDistribution, int * ndriverevents,int * driverFitnessSize
+		){   //
+  
+  //printf("checkpoint 1\n");
 	for(int i=0;i<*nevents;i++){
 		events.push_back(Event(eventnode[i],eventts[i],eventval[i],eventdriverid[i],eventuid[i]));
 	}
-		
+	//printf("checkpoint 2\n");
 	std::map<int, vector<std::pair<double,int>>> fitnessByCompartment;
 	for(int i=0;i<*ncomp;i++){
 		auto it=fitnessByCompartment.find(compinfoval[i]);
@@ -44,8 +88,9 @@ void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cel
 		fitnessByCompartment[compinfoval[i]].push_back(std::pair<double,int>(compinfofitness[i],driverid[i]));
 
 	}
-	
+	//printf("checkpoint 3 %d\n",*ncompartment);
 	for(int i=0;i<*ncompartment;i++){
+	  //printf("comp %d\n",i);
 		if(compartmentval[i]!=i){
 			printf("Should be contiguous %d %d\n",compartmentval[i],i);
 			throw "compartment should have contiguous ordered value 0..n";
@@ -54,13 +99,54 @@ void setSimData(vector<Event> & events,vector<shared_ptr<CellCompartment>> & cel
 		cellCompartments.push_back(std::make_shared<CellCompartment>(CellCompartment(i,
 		compartmentsize[i],
 		compartmentrate[i],
+    compartmentdeathrate[i],      
 		fitnessByCompartment[compartmentval[i]])));
 	}
+	
+}
+  
+void setMigrations(vector<shared_ptr<CellCompartment>> & cellCompartments,
+                  int * c1,
+                  int * c2,
+                  double * arate,
+                  double * srate,
+                  int nmigration){
+  // Add migration config to compartments
+  if(nmigration==0){
+    return;
+  }
+  int cmax=0;
+  for(int i=0;i<nmigration;i++){
+    cmax=c1[i]>cmax?c1[i]:cmax;
+    cmax=c2[i]>cmax?c2[i]:cmax;
+  }
+  double totArate[cmax+1];
+  double totSrate[cmax+1];
+  for(int i=0;i<cmax+1;i++){
+    totArate[i]=0.0;
+    totSrate[i]=0.0;
+  }
+ // map<int,double> totalSrate;
+  double tol=1e-8;
+  for(int i=0;i<nmigration;i++){
+    cellCompartments[c1[i]]->addSymmetricDifferentiationRate(cellCompartments[c2[i]],srate[i]);
+    cellCompartments[c1[i]]->addAsymmetricDifferentiationRate(cellCompartments[c2[i]],arate[i]);
+    totArate[c1[i]]+=arate[i];
+    totSrate[c1[i]]+=srate[i];
+  }
+  // The following specifies the proportion of differentiation events from other compartments that feed into each compartment.
+  for(int i=0;i<nmigration;i++){
+    double s=totSrate[c1[i]]>tol?totSrate[c1[i]]:1.0;
+    double a=totArate[c1[i]]>tol?totArate[c1[i]]:1.0;
+    cellCompartments[c2[i]]->addIncomingSymmetricDifferentiationRate(cellCompartments[c1[i]],srate[i]/s);
+    cellCompartments[c2[i]]->addIncomingAsymmetricDifferentiationRate(cellCompartments[c1[i]],arate[i]/a);
+  }
 }
 
 void populateEvents(const vector<Event> & eventsOut,int * neventOut,int * eventvalOut,int * eventdriveridOut,double * eventtsOut,int * eventuidOut,int * eventnodeOut){
 	int k=0;
 	*neventOut=eventsOut.size();
+	printf("Number of events: %d\n",*neventOut);
 	for(const Event & evento : eventsOut){
 				eventvalOut[k]=evento.value;
 				eventdriveridOut[k]=evento.driverid;
@@ -110,6 +196,7 @@ void sim_pop2(
 		int * nevents,
 		int * compartmentval,
 		double *  compartmentrate,
+		double * compartmentdeathrate,
 		int * compartmentsize,
 		int * ncompartment,
 		int * compinfoval,
@@ -117,7 +204,7 @@ void sim_pop2(
 		int * driverid,
 		int *  ncomp,
 		double * params,
-		int * nparams,
+		//int * nparams,
 		double * fitnessDistribution, 
 		int * nMaxPreviousDriverID, 
 		int * max_size,
@@ -125,8 +212,13 @@ void sim_pop2(
 		double * trajectoryTs,
 		int * trajectoryPop,
 		double * trajectoryDivRate,
+		double * trajectoryDeathRate,
 		int * trajectoryCompartment,
 		int * trajectorySize,
+		int * c1,
+		int * c2,
+		double * arate,
+		double * srate,
 		int * driverFitnessSize,
 		int * bVerbose,
 		int * edgesOut,
@@ -169,12 +261,16 @@ void sim_pop2(
 			throw "driverAcquisitionRate too high!";
 		}
 		int maxDriverCount=round(params[5]);
-		
+		int nmigration=round(params[6]);
+		printf("nmigration=%d\n",nmigration);
 		vector<Event> events;
 		vector<shared_ptr<CellCompartment>> cellCompartments;
+		//Initialise Trajectories
+		
+		
 		setSimData(events,cellCompartments,eventnode,eventts,eventval,eventdriverid,eventuid,nevents,compinfoval,compinfofitness,
-				ncomp,compartmentsize,compartmentrate,compartmentval,ncompartment,driverid,fitnessDistribution,nMaxPreviousDriverID,driverFitnessSize);  //
-
+				ncomp,compartmentsize,compartmentrate,compartmentdeathrate,compartmentval,ncompartment,driverid,fitnessDistribution,nMaxPreviousDriverID,driverFitnessSize);  //
+		setMigrations(cellCompartments,c1,c2,arate,srate,nmigration);
 		CellSimulation sim(edges,
 				ndivs,
 				tBirth,
@@ -187,6 +283,7 @@ void sim_pop2(
 				trajectoryTs,  //trajectoryYear
 				trajectoryPop,
 				trajectoryDivRate,
+				trajectoryDeathRate,
 				trajectoryCompartment,
 				*trajectorySize,
 				*max_size,
@@ -206,15 +303,26 @@ void sim_pop2(
 		populateEvents(eventsOut,neventOut,eventvalOut,eventdriveridOut,eventtsOut,eventuidOut,eventnodeOut);
 		populateCompartmentInfo(sim, nCompIDOut,nCompPopsOut, nSubCompIDOut, nCompFitnessOut, nformedPops);
 		
-		auto popTrace=sim.getPopulationTrace();
+		vector<PopulationTimePoint> popTrace=sim.getPopulationTrace();
 
 		int k=0;
-		for(tuple<double,int,int> timepoint : popTrace){
-			timestampOut[k]=std::get<0>(timepoint);//.first;
-			nPopSizeOut[k]=std::get<1>(timepoint);//timepoint.second;
-			nDriverOut[k++]=std::get<2>(timepoint);//
-		}
 		*nEventsCount=popTrace.size();
+		int nn=*nEventsCount;
+		int j=0;
+		for(PopulationTimePoint timepoint : popTrace){
+		  //printf("%7.6f\n",timepoint.timeStamp);
+			timestampOut[k]=timepoint.timeStamp;//std::get<0>(timepoint);//.first;
+			nPopSizeOut[k]=timepoint.getTotalPopulation();//std::get<1>(timepoint);//timepoint.second;
+			nDriverOut[k]=timepoint.getTotalDriverCount();//std::get<2>(timepoint);//
+			for(j=0;j<cellCompartments.size();j++){
+			  nPopSizeOut[k+(j+1)*nn]=timepoint.getPopulation(cellCompartments[j]->id);//std::get<1>(timepoint);//timepoint.second;
+			  nDriverOut[k+(j+1)*nn]=timepoint.getDriverCount(cellCompartments[j]->id);//std::get<2>(timepoint);//
+			  
+			}
+			k++;
+		}
+		
+		
 		//printf("status=%d\n",*status);
 		//*status=0;
 
@@ -245,6 +353,7 @@ void sub_sample(
 		int * nevents,
 		int * compartmentval,
 		double *  compartmentrate,
+		double* compartmentdeathrate,
 		int * compartmentsize,
 		int * ncompartment,
 		int * compinfoval,
@@ -259,6 +368,7 @@ void sub_sample(
 		double * trajectoryTs,
 		int * trajectoryPop,
 		double * trajectoryDivRate,
+		double * trajectoryDeathRate,
 		int * trajectoryCompartment,
 		int * trajectorySize,
 		int * driverFitnessSize,
@@ -289,7 +399,7 @@ void sub_sample(
 		vector<Event> events;
 		vector<shared_ptr<CellCompartment>> cellCompartments;
 		setSimData(events,cellCompartments,eventnode,eventts,eventval,eventdriverid,eventuid,nevents,compinfoval,compinfofitness,
-				ncomp,compartmentsize,compartmentrate,compartmentval,ncompartment,driverid,fitnessDistribution,ndriverevents,driverFitnessSize);   //,fitnessDistribution
+				ncomp,compartmentsize,compartmentrate,compartmentdeathrate,compartmentval,ncompartment,driverid,fitnessDistribution,ndriverevents,driverFitnessSize);   //,fitnessDistribution
 		
 		
 		
@@ -317,6 +427,7 @@ void sub_sample(
 				trajectoryTs,  //trajectoryYear
 				trajectoryPop,
 				trajectoryDivRate,
+				trajectoryDeathRate,
 				trajectoryCompartment,
 				*trajectorySize,
 				*max_size,

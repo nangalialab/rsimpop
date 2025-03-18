@@ -4,7 +4,14 @@
 \alias{plot_tree_events}
 \title{Plots simpop events on a the tree}
 \usage{
-plot_tree_events(tree, legpos = "topleft", fmode = 0, events.keep = NULL, ...)
+plot_tree_events(
+  tree,
+  legpos = "topleft",
+  fmode = 0,
+  events.keep = NULL,
+  use.desc = FALSE,
+  ...
+)
 }
 \arguments{
 \item{tree}{phylo/simpop}
