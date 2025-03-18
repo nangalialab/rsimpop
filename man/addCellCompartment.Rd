@@ -10,7 +10,8 @@ addCellCompartment(
   rate,
   ndriver = 0,
   basefit = 0,
-  descr = NULL
+  descr = NULL,
+  death_rate = 0
 )
 }
 \arguments{

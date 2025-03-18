@@ -14,12 +14,16 @@
 #' growthphase=sim_pop(NULL,params=params,cfg)
 #' stree=get_subsampled_tree(growthphase,50)
 #' plot_tree_events(stree,fmode=1)
-plot_tree_events=function (tree, legpos = "topleft", fmode=0,events.keep=NULL,...)
+plot_tree_events=function (tree, legpos = "topleft", fmode=0,events.keep=NULL,use.desc=FALSE,...)
 {
-  events = tree$events
-  events = events[order(events$ts), ]
   if (is.null(tree$events)) {
     stop("tree has no events")
+  }
+  events = tree$events
+  events = events[order(events$ts), ]
+  events = events %>% left_join(tree$cfg$compartment,by=c("value"="val"))
+  if(use.desc){
+    events=events %>% mutate(value=desc)
   }
   tree = plot_tree(tree, ...)
   idx.child = match(tree$edge[, 2], tree$edge[, 1])
@@ -79,7 +83,7 @@ plot_tree_events=function (tree, legpos = "topleft", fmode=0,events.keep=NULL,..
     info = rsimpop:::get_edge_info(NULL, tree, thisnode)
     frac = (events$ts[i] - tree$tBirth[events$idx[i]])/(duration[events$idx[i]]+1e-6)##Fix zero duration
     points(x = info$x, y = info$yt - frac * (info$yt - info$yb),
-           pch = events$pch[i], col = events$col[i], cex = 2)
+           pch = events$pch[i], col = events$col[i], cex = 1)
     fracs[[idx]] = c(fracs[[idx]], frac)
     cols[[idx]] = c(cols[[idx]], events$col[i])
     kids = get_all_node_children(thisnode, tree)

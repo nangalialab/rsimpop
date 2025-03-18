@@ -12,6 +12,7 @@
 #include "CellCompartment.h"
 #include "RandomNumberGenerator.h"
 #include "Event.h"
+#include "PopulationTimePoint.h"
 
 using namespace std;
 
@@ -32,6 +33,7 @@ public:
 				double * trajectoryTs,  //trajectoryYear
 				int * trajectoryPop,
 				double * trajectoryDivRate,
+				double * trajectoryDeathRate,
 				int * trajectoryCompartment,
 				int trajectorySize,
 				int maxSize,double * fitnessDistribution, 
@@ -53,7 +55,7 @@ public:
 			int * numTip,vector<Event> & eventsOut);
 	int run(double stopTime,bool bStopAtEquilibrium,bool bStopIfEmpty,int maxDriverCount);  
 	void recycle(shared_ptr<PhyloNode> node);
-	vector<tuple<double,int,int>> getPopulationTrace();
+	vector<PopulationTimePoint> getPopulationTrace();
 	void snap();
 	void die(shared_ptr<PhyloNode>);
 	pair<shared_ptr<PhyloNode>,shared_ptr<PhyloNode>> divide(shared_ptr<PhyloNode> node);
@@ -62,6 +64,9 @@ public:
 	pair<int,double> getNextDriver();
 	//double * mfitnessValues;
 	vector<double> mfitnessValues;
+	vector<int> compartmentIDs;
+	vector<int> populationCounts;
+	vector<int> driverCounts;
 
 private:
 
@@ -93,8 +98,9 @@ private:
 	int driverID=1;
 	int nAddedDrivers=0;
 	int bVerbose=1;
-	vector<tuple<double,int,int>> populationTrace;///TODO implement at compartment/driver level
-	std::stack<tuple<double,int,double,int>> trajectoryStack;
+	//vector<tuple<double,int,int>> populationTrace;///TODO implement at compartment/driver level
+	vector<PopulationTimePoint> populationTrace;
+	std::stack<tuple<double,int,double,int,double>> trajectoryStack;
 	int lastDriverID=0;
 	std::stack<double> driverFitnessStack;
 };

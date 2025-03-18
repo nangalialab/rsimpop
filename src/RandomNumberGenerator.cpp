@@ -71,10 +71,11 @@ int RandomNumberGenerator::sample(int n,double * prob,bool isNormalised){
 	double tot=0.0;
 	for(int i=0;i<n;i++){
 		tot+=(prob[i]/ptot);
-		if(rnd<tot){
+		if(rnd<=tot){
 			return i;
 		}
 	}
+	printf("rnd=%7.6f tot=%7.6f\n",rnd,tot);
 	throw "RandomNumberGenerator::sample(,,) Unexpected path!";
 	return -1;
 }

@@ -32,18 +32,23 @@ private:
 	int numOfAddedDrivers=0;
 	std::vector<double> mFitnessOut;
 	std::vector<int> mID;
+	vector<pair<shared_ptr<CellCompartment>,double>> symmetricDifferentiation;
+	vector<pair<shared_ptr<CellCompartment>,double>> asymmetricDifferentiation;
+	vector<pair<shared_ptr<CellCompartment>,double>> incomingSymmetricDifferentiation;
+	vector<pair<shared_ptr<CellCompartment>,double>> incomingAsymmetricDifferentiation;
 	
 
-
-
 public:
-	CellCompartment(int id,int targetPopSize,double divisionRate,std::vector<std::pair<double,int>> fitnessID);  //,
+	CellCompartment(int id,int targetPopSize,double divisionRate,double deathRate,std::vector<std::pair<double,int>> fitnessID);  //,
 	virtual ~CellCompartment();
 	int id;
 	int mTargetPopSize;
 	double mDivisionRate;
+	double mDeathRate;
 	double mTotalDivRate=0.0;
 	double mTotalDeathRate=0.0;
+	double mTotalAsymmetricDivRate=0.0;
+	double mTotalSymmetricDivRate=0.0;
 	int mindexInFitnessDistro; 
 	double alpha=0.2;
 	std::vector<double> mFitness;
@@ -54,9 +59,14 @@ public:
 	void addNode(shared_ptr<PhyloNode> node,int subid);
 	double getTotalRate();
 	double getTotalDivisionRate();
+	double getTotalDeathRate();
 	void setRates();
 	void setNumNonEmptyIndices();
 	int getSub(int ID);
+	void addSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	void addAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	void addIncomingSymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
+	void addIncomingAsymmetricDifferentiationRate(shared_ptr<CellCompartment> otherCompartment,double rate);
 	
 
 	void doEvent(CellSimulation & sim);

@@ -1,4 +1,9 @@
 # CHANGES
+## 2.4.0
+Added continuous differentiation of cells between compartments.
+Now export the population trajectory of individual compartments.
+## 2.3.0
+Added death rate to trajectory.
 ## 2.2.7
 Fix bug where run_driver_process_sim dropped drivers from growth phase
 ## 2.2.6

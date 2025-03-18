@@ -159,19 +159,23 @@ run_driver_process_sim=function(
     cat("delay=",delay,"\n")
     initSimPop(-1,bForce = TRUE)
   }
+  #browser()
   ## setup trajectory
   if(!is.null(user_trajectory) & (class(user_trajectory) %in% c("data.frame", "data.table"))){
     if(b_verbose){
     message("cell population will be modelled based on provided trajectory")
     }
-    if(ncol(user_trajectory) != 4){
-      stop("trajectory data frame should have 4 columns named as 'ts', 'target_pop_size', 'division_rate', 'compartment'")
+    if(ncol(user_trajectory) < 4){
+      stop("trajectory data frame should have at least 4 columns named as 'ts', 'target_pop_size', 'division_rate', 'compartment'")
     }
     if(any(user_trajectory$division_rate>1)){
       stop("Supplied division rate too high; should be less than 1.0")
     }
     if(any(user_trajectory$target_pop_size>20e6)){
       stop("Supplied population too high; should be less than 20e6")
+    }
+    if(is.null(user_trajectory$death_rate)){
+      user_trajectory$death_rate=0
     }
     user_trajectory=user_trajectory[order(user_trajectory$ts,user_trajectory$compartment),]
     if(length(unique(user_trajectory$compartment))>1){
@@ -180,7 +184,8 @@ run_driver_process_sim=function(
   }else{
     nsd=nyears*365
     user_trajectory = data.frame(ts=c(nsd, nsd), target_pop_size=c(target_pop_size, target_pop_size),
-                                 division_rate=c(final_division_rate, final_division_rate), compartment=c(1,1))
+                                 division_rate=c(final_division_rate, final_division_rate), 
+                                 death_rate=c(0,0),compartment=c(1,1))
   }
   nsd=user_trajectory$ts[nrow(user_trajectory)]
   
